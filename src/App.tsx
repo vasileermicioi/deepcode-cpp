@@ -79,6 +79,7 @@ export default function App() {
 			setProgress(error instanceof Error ? error.message : String(error));
 			return;
 		}
+		let cancelled = false;
 		compiler
 			.preload((event) => {
 				const suffix =
@@ -88,13 +89,24 @@ export default function App() {
 				setProgress(`${event.message}${suffix}`);
 			})
 			.then(() => {
+				if (cancelled) {
+					return;
+				}
 				setStatus("idle");
 				setProgress("Clang + twr-wasm ready");
 			})
 			.catch((error: unknown) => {
+				if (cancelled) {
+					return;
+				}
 				setStatus("error");
 				setProgress(error instanceof Error ? error.message : String(error));
 			});
+		return () => {
+			cancelled = true;
+			runtimeRef.current?.clear();
+			runtimeRef.current = null;
+		};
 	}, []);
 
 	const statusLabel = useMemo(() => {

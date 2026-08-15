@@ -1,4 +1,11 @@
-import { createReadStream, readdirSync, readFileSync, statSync } from "node:fs";
+import {
+	createReadStream,
+	mkdirSync,
+	readdirSync,
+	readFileSync,
+	statSync,
+	writeFileSync,
+} from "node:fs";
 import path from "node:path";
 import tailwindcss from "@tailwindcss/vite";
 import react from "@vitejs/plugin-react";
@@ -11,6 +18,10 @@ const isolationHeaders = {
 };
 
 const CLOUDFLARE_ASSET_LIMIT = 25 * 1024 * 1024;
+
+function stripSourcemapUrl(code: string) {
+	return code.replace(/\n\/\/[#@] sourceMappingURL=.*$/gm, "");
+}
 
 function stripBrokenVendorSourcemaps(): Plugin {
 	return {
@@ -29,9 +40,78 @@ function stripBrokenVendorSourcemaps(): Plugin {
 				return;
 			}
 			return {
-				code: code.replace(/\n\/\/[#@] sourceMappingURL=.*$/gm, ""),
+				code: stripSourcemapUrl(code),
 				map: null,
 			};
+		},
+	};
+}
+
+// twr-wasm keys library classes by `new URL(import.meta.url).pathname` and
+// dynamically imports that path from its async worker. Bundling collapses
+// every library onto one URL, so builtins with no interfaceName throw
+// "A second twrLibrary instance was registered but interfaceName===undefined".
+function serveUnbundledTwrWasm(): Plugin {
+	const srcDir = path.resolve(
+		import.meta.dirname,
+		"node_modules/twr-wasm/lib-js",
+	);
+	const publicPath = "/twr-wasm";
+
+	const jsFile = (name: string) => {
+		if (!name || name.includes("..") || !name.endsWith(".js")) {
+			return null;
+		}
+		const full = path.resolve(srcDir, name);
+		if (full !== srcDir && !full.startsWith(srcDir + path.sep)) {
+			return null;
+		}
+		return full;
+	};
+
+	return {
+		name: "serve-unbundled-twr-wasm",
+		enforce: "pre",
+		resolveId(source) {
+			if (source === "twr-wasm") {
+				return { id: `${publicPath}/index.js`, external: true };
+			}
+		},
+		configureServer(server) {
+			server.middlewares.use((req, res, next) => {
+				const url = req.url?.split("?")[0] ?? "";
+				if (!url.startsWith(`${publicPath}/`)) {
+					next();
+					return;
+				}
+				const full = jsFile(url.slice(publicPath.length + 1));
+				if (!full) {
+					next();
+					return;
+				}
+				try {
+					const code = stripSourcemapUrl(readFileSync(full, "utf8"));
+					res.setHeader("Content-Type", "text/javascript; charset=utf-8");
+					res.setHeader("Cache-Control", "no-cache");
+					res.end(code);
+				} catch {
+					next();
+				}
+			});
+		},
+		writeBundle() {
+			const dest = path.resolve(import.meta.dirname, "dist/twr-wasm");
+			mkdirSync(dest, { recursive: true });
+			for (const name of readdirSync(srcDir)) {
+				const full = jsFile(name);
+				if (!full) {
+					continue;
+				}
+				writeFileSync(
+					path.join(dest, name),
+					stripSourcemapUrl(readFileSync(full, "utf8")),
+				);
+			}
 		},
 	};
 }
@@ -111,6 +191,7 @@ function rejectOversizedAssets(): Plugin {
 
 export default defineConfig({
 	plugins: [
+		serveUnbundledTwrWasm(),
 		stubBrowserccWasmUrls(),
 		serveLocalToolchainWasm(),
 		stripBrokenVendorSourcemaps(),
