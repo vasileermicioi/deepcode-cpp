@@ -1,7 +1,5 @@
 import Clang from "browsercc/dist/clang.js";
-import clangWasmUrl from "browsercc/dist/clang.wasm?url";
 import LLD from "browsercc/dist/lld.js";
-import lldWasmUrl from "browsercc/dist/lld.wasm?url";
 import {
 	type CompilerEvent,
 	type CompilerRequest,
@@ -27,6 +25,9 @@ type EmscriptenModule = {
 
 const MEMORY_BYTES = 16 * 1024 * 1024;
 const STACK_BYTES = 128 * 1024;
+const TOOLCHAIN_WASM_BASE = import.meta.env.DEV
+	? "/toolchain"
+	: "https://cdn.jsdelivr.net/npm/browsercc@0.1.1/dist";
 
 let clang: EmscriptenModule | null = null;
 let lldWasm: Uint8Array | null = null;
@@ -145,8 +146,8 @@ async function ensureToolchain() {
 
 	post({ type: "progress", message: "Downloading Clang..." });
 	const [clangWasm, fetchedLldWasm, sysroot] = await Promise.all([
-		fetchBinary(clangWasmUrl, "Clang"),
-		fetchBinary(lldWasmUrl, "LLD"),
+		fetchBinary(`${TOOLCHAIN_WASM_BASE}/clang.wasm`, "Clang"),
+		fetchBinary(`${TOOLCHAIN_WASM_BASE}/lld.wasm`, "LLD"),
 		fetch("/twr-sysroot.tar").then(async (response) => {
 			if (!response.ok) {
 				throw new Error("Failed to download twr-wasm sysroot");
