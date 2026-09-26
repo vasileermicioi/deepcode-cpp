@@ -1,4 +1,4 @@
-export type CppStandard = "c++17" | "c++20" | "c++23";
+export type CppStandard = "c++20";
 
 export type CompilerRequest =
 	| { type: "init" }
