@@ -29,13 +29,21 @@ function stripBrokenVendorSourcemaps(): Plugin {
 		enforce: "pre",
 		load(id) {
 			const file = id.split("?")[0];
+			if (file.startsWith("/twr-wasm/") || file.startsWith("\0")) {
+				return;
+			}
 			if (
 				!file.includes(`${path.sep}twr-wasm${path.sep}`) ||
 				!file.endsWith(".js")
 			) {
 				return;
 			}
-			const code = readFileSync(file, "utf8");
+			let code: string;
+			try {
+				code = readFileSync(file, "utf8");
+			} catch {
+				return;
+			}
 			if (!code.includes("sourceMappingURL")) {
 				return;
 			}
@@ -72,9 +80,51 @@ function serveUnbundledTwrWasm(): Plugin {
 	return {
 		name: "serve-unbundled-twr-wasm",
 		enforce: "pre",
-		resolveId(source) {
+		resolveId(source, importer) {
 			if (source === "twr-wasm") {
 				return { id: `${publicPath}/index.js`, external: true };
+			}
+			// Vite dev pre-transform (warmupRequest) bypasses connect
+			// middlewares and calls transformRequest directly, so relative
+			// imports inside /twr-wasm/*.js must resolve here. Without this,
+			// dev logs "Pre-transform error: ENOENT ... /twr-wasm/index.js".
+			if (importer) {
+				const cleanImporter = importer.split("?")[0];
+				if (
+					cleanImporter.startsWith(`${publicPath}/`) &&
+					(source.startsWith("./") || source.startsWith("../"))
+				) {
+					const resolved = path.posix.normalize(
+						path.posix.join(path.posix.dirname(cleanImporter), source),
+					);
+					if (
+						resolved.startsWith(`${publicPath}/`) &&
+						resolved.endsWith(".js")
+					) {
+						return resolved;
+					}
+				}
+			}
+		},
+		load(id) {
+			// Satisfy Vite dev transformRequest/warmup for /twr-wasm/*.js.
+			// Browser requests still hit the raw middleware below first,
+			// preserving `import.meta.url` for twr-wasm workers/libraries.
+			const file = id.split("?")[0];
+			if (!file.startsWith(`${publicPath}/`)) {
+				return;
+			}
+			const full = jsFile(file.slice(publicPath.length + 1));
+			if (!full) {
+				return;
+			}
+			try {
+				return {
+					code: stripSourcemapUrl(readFileSync(full, "utf8")),
+					map: null,
+				};
+			} catch {
+				return;
 			}
 		},
 		configureServer(server) {
@@ -91,6 +141,9 @@ function serveUnbundledTwrWasm(): Plugin {
 				}
 				try {
 					const code = stripSourcemapUrl(readFileSync(full, "utf8"));
+					for (const [key, value] of Object.entries(isolationHeaders)) {
+						res.setHeader(key, value);
+					}
 					res.setHeader("Content-Type", "text/javascript; charset=utf-8");
 					res.setHeader("Cache-Control", "no-cache");
 					res.end(code);
@@ -152,6 +205,9 @@ function serveLocalToolchainWasm(): Plugin {
 				if (file !== "clang.wasm" && file !== "lld.wasm") {
 					next();
 					return;
+				}
+				for (const [key, value] of Object.entries(isolationHeaders)) {
+					res.setHeader(key, value);
 				}
 				res.setHeader("Content-Type", "application/wasm");
 				res.setHeader("Cache-Control", "public, max-age=31536000, immutable");
