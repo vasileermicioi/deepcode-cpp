@@ -23,6 +23,22 @@ function stripSourcemapUrl(code: string) {
 	return code.replace(/\n\/\/[#@] sourceMappingURL=.*$/gm, "");
 }
 
+function patchTwrWasmCode(code: string) {
+	let next = stripSourcemapUrl(code);
+	// twrlibrary.js intentionally does `await import(this.libSourcePath)` at
+	// runtime (worker loads the library by URL). Tell Vite to leave it as-is.
+	if (
+		next.includes("import(this.libSourcePath)") &&
+		!next.includes("@vite-ignore")
+	) {
+		next = next.replace(
+			"import(this.libSourcePath)",
+			"import(/* @vite-ignore */ this.libSourcePath)",
+		);
+	}
+	return next;
+}
+
 function stripBrokenVendorSourcemaps(): Plugin {
 	return {
 		name: "strip-broken-vendor-sourcemaps",
@@ -120,7 +136,7 @@ function serveUnbundledTwrWasm(): Plugin {
 			}
 			try {
 				return {
-					code: stripSourcemapUrl(readFileSync(full, "utf8")),
+					code: patchTwrWasmCode(readFileSync(full, "utf8")),
 					map: null,
 				};
 			} catch {
@@ -140,7 +156,7 @@ function serveUnbundledTwrWasm(): Plugin {
 					return;
 				}
 				try {
-					const code = stripSourcemapUrl(readFileSync(full, "utf8"));
+					const code = patchTwrWasmCode(readFileSync(full, "utf8"));
 					for (const [key, value] of Object.entries(isolationHeaders)) {
 						res.setHeader(key, value);
 					}
@@ -162,7 +178,7 @@ function serveUnbundledTwrWasm(): Plugin {
 				}
 				writeFileSync(
 					path.join(dest, name),
-					stripSourcemapUrl(readFileSync(full, "utf8")),
+					patchTwrWasmCode(readFileSync(full, "utf8")),
 				);
 			}
 		},
