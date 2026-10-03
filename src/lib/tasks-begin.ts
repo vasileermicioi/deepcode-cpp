@@ -24,6 +24,20 @@ export const UI_TEXT: Record<
 		standard: string;
 		stdinLabel: string;
 		stdinPlaceholder: string;
+		program: string;
+		buildLog: string;
+		tests: string;
+		run: string;
+		running: string;
+		compiling: string;
+		compilationFailed: string;
+		buildWarnings: string;
+		runTests: string;
+		testing: string;
+		buildOutputPlaceholder: string;
+		testsPlaceholder: string;
+		expected: string;
+		actual: string;
 	}
 > = {
 	en: {
@@ -34,6 +48,21 @@ export const UI_TEXT: Record<
 		standard: "C++20",
 		stdinLabel: "stdin",
 		stdinPlaceholder: "Values for cin, space- or newline-separated",
+		program: "Program",
+		buildLog: "Build log",
+		tests: "Tests",
+		run: "Run",
+		running: "Running...",
+		compiling: "Compiling...",
+		compilationFailed: "Compilation failed",
+		buildWarnings: "Build warnings",
+		runTests: "Run tests",
+		testing: "Testing...",
+		buildOutputPlaceholder: "Build output will appear here.",
+		testsPlaceholder:
+			"Press “Run tests” to check your solution against 5 predefined cases.",
+		expected: "expected",
+		actual: "got",
 	},
 	ru: {
 		tasks: "Задания",
@@ -43,6 +72,21 @@ export const UI_TEXT: Record<
 		standard: "C++20",
 		stdinLabel: "ввод",
 		stdinPlaceholder: "Значения для cin, через пробел или с новой строки",
+		program: "Программа",
+		buildLog: "Журнал сборки",
+		tests: "Тесты",
+		run: "Запустить",
+		running: "Выполнение...",
+		compiling: "Компиляция...",
+		compilationFailed: "Ошибка компиляции",
+		buildWarnings: "Предупреждения сборки",
+		runTests: "Запустить тесты",
+		testing: "Тестирование...",
+		buildOutputPlaceholder: "Здесь появится вывод сборки.",
+		testsPlaceholder:
+			"Нажмите «Запустить тесты», чтобы проверить решение на 5 тестах.",
+		expected: "ожидалось",
+		actual: "получено",
 	},
 	ro: {
 		tasks: "Sarcini",
@@ -52,6 +96,21 @@ export const UI_TEXT: Record<
 		standard: "C++20",
 		stdinLabel: "stdin",
 		stdinPlaceholder: "Valori pentru cin, separate prin spațiu sau linie nouă",
+		program: "Program",
+		buildLog: "Jurnal compilare",
+		tests: "Teste",
+		run: "Rulează",
+		running: "Se execută...",
+		compiling: "Se compilează...",
+		compilationFailed: "Compilare eșuată",
+		buildWarnings: "Avertismente compilare",
+		runTests: "Rulează testele",
+		testing: "Testare...",
+		buildOutputPlaceholder: "Aici va apărea output-ul compilării.",
+		testsPlaceholder:
+			"Apasă „Rulează testele” pentru a verifica soluția pe 5 cazuri predefinite.",
+		expected: "așteptat",
+		actual: "obținut",
 	},
 };
 
@@ -74,7 +133,7 @@ int main() {
     double a;
     cin >> a;
 
-    // TODO: Begin1 — compute P = 4*a
+    // TODO: write your solution here
     double P = 0; // <-- your code here
 
     cout << P;
@@ -96,7 +155,7 @@ int main() {
     double a;
     cin >> a;
 
-    // TODO: Begin2 — compute S = a*a
+    // TODO: write your solution here
     double S = 0; // <-- your code here
 
     cout << S;
@@ -118,11 +177,11 @@ int main() {
     double a, b;
     cin >> a >> b;
 
-    // TODO: Begin3 — compute S = a*b, P = 2*(a+b)
+    // TODO: write your solution here
     double S = 0; // <-- your code here
     double P = 0; // <-- your code here
 
-    cout << S << "\\n" << P;
+    cout << S << " " << P;
     return 0;
 }
 `,
@@ -141,7 +200,7 @@ int main() {
     double d;
     cin >> d;
 
-    // TODO: Begin4 — compute L = pi*d, pi = 3.14
+    // TODO: write your solution here
     const double pi = 3.14;
     double L = 0; // <-- your code here
 
@@ -164,11 +223,11 @@ int main() {
     double a;
     cin >> a;
 
-    // TODO: Begin5 — compute V = a^3, S = 6*a^2
+    // TODO: write your solution here
     double V = 0; // <-- your code here
     double S = 0; // <-- your code here
 
-    cout << V << "\\n" << S;
+    cout << V << " " << S;
     return 0;
 }
 `,
@@ -187,11 +246,11 @@ int main() {
     double a, b, c;
     cin >> a >> b >> c;
 
-    // TODO: Begin6 — compute V = a*b*c, S = 2*(a*b + b*c + a*c)
+    // TODO: write your solution here
     double V = 0; // <-- your code here
     double S = 0; // <-- your code here
 
-    cout << V << "\\n" << S;
+    cout << V << " " << S;
     return 0;
 }
 `,
@@ -210,12 +269,12 @@ int main() {
     double R;
     cin >> R;
 
-    // TODO: Begin7 — compute L = 2*pi*R, S = pi*R*R, pi = 3.14
+    // TODO: write your solution here
     const double pi = 3.14;
     double L = 0; // <-- your code here
     double S = 0; // <-- your code here
 
-    cout << L << "\\n" << S;
+    cout << L << " " << S;
     return 0;
 }
 `,
@@ -234,7 +293,7 @@ int main() {
     double a, b;
     cin >> a >> b;
 
-    // TODO: Begin8 — compute average = (a+b)/2
+    // TODO: write your solution here
     double avg = 0; // <-- your code here
 
     cout << avg;
@@ -259,7 +318,7 @@ int main() {
     double a, b;
     cin >> a >> b;
 
-    // TODO: Begin9 — compute sqrt(a*b)
+    // TODO: write your solution here
     double g = 0; // <-- your code here, use sqrt
 
     cout << g;
@@ -281,12 +340,12 @@ int main() {
     double a, b;
     cin >> a >> b;
 
-    // TODO: Begin10 — use a2 = a*a, b2 = b*b, then sum/diff/prod/quotient
+    // TODO: write your solution here
     double a2 = 0; // <-- your code here
     double b2 = 0; // <-- your code here
     double sum = 0, diff = 0, prod = 0, quot = 0; // <-- your code here
 
-    cout << sum << "\\n" << diff << "\\n" << prod << "\\n" << quot;
+    cout << sum << " " << diff << " " << prod << " " << quot;
     return 0;
 }
 `,
@@ -308,10 +367,10 @@ int main() {
     double a, b;
     cin >> a >> b;
 
-    // TODO: Begin11 — use abs(a), abs(b), then sum/diff/prod/quotient
+    // TODO: write your solution here
     double sum = 0, diff = 0, prod = 0, quot = 0; // <-- your code here
 
-    cout << sum << "\\n" << diff << "\\n" << prod << "\\n" << quot;
+    cout << sum << " " << diff << " " << prod << " " << quot;
     return 0;
 }
 `,
@@ -333,11 +392,11 @@ int main() {
     double a, b;
     cin >> a >> b;
 
-    // TODO: Begin12 — c = sqrt(a*a + b*b), P = a+b+c
+    // TODO: write your solution here
     double c = 0; // <-- your code here
     double P = 0; // <-- your code here
 
-    cout << c << "\\n" << P;
+    cout << c << " " << P;
     return 0;
 }
 `,
@@ -356,11 +415,11 @@ int main() {
     double R1, R2;
     cin >> R1 >> R2;
 
-    // TODO: Begin13 — S1 = pi*R1*R1, S2 = pi*R2*R2, S3 = S1-S2
+    // TODO: write your solution here
     const double pi = 3.14;
     double S1 = 0, S2 = 0, S3 = 0; // <-- your code here
 
-    cout << S1 << "\\n" << S2 << "\\n" << S3;
+    cout << S1 << " " << S2 << " " << S3;
     return 0;
 }
 `,
@@ -379,12 +438,12 @@ int main() {
     double L;
     cin >> L;
 
-    // TODO: Begin14 — R = L/(2*pi), S = pi*R*R
+    // TODO: write your solution here
     const double pi = 3.14;
     double R = 0; // <-- your code here
     double S = 0; // <-- your code here
 
-    cout << R << "\\n" << S;
+    cout << R << " " << S;
     return 0;
 }
 `,
@@ -406,12 +465,12 @@ int main() {
     double S;
     cin >> S;
 
-    // TODO: Begin15 — D = sqrt(4*S/pi), L = pi*D
+    // TODO: write your solution here
     const double pi = 3.14;
     double D = 0; // <-- your code here, use sqrt
     double L = 0; // <-- your code here
 
-    cout << D << "\\n" << L;
+    cout << D << " " << L;
     return 0;
 }
 `,
@@ -433,7 +492,7 @@ int main() {
     double x1, x2;
     cin >> x1 >> x2;
 
-    // TODO: Begin16 — distance = abs(x2-x1)
+    // TODO: write your solution here
     double d = 0; // <-- your code here, use abs
 
     cout << d;
@@ -458,10 +517,10 @@ int main() {
     double A, B, C;
     cin >> A >> B >> C;
 
-    // TODO: Begin17 — AC = abs(C-A), BC = abs(C-B), sum = AC+BC
+    // TODO: write your solution here
     double AC = 0, BC = 0, sum = 0; // <-- your code here
 
-    cout << AC << "\\n" << BC << "\\n" << sum;
+    cout << AC << " " << BC << " " << sum;
     return 0;
 }
 `,
@@ -483,7 +542,7 @@ int main() {
     double A, B, C;
     cin >> A >> B >> C;
 
-    // TODO: Begin18 — AC = abs(C-A), BC = abs(B-C), product = AC*BC
+    // TODO: write your solution here
     double prod = 0; // <-- your code here
 
     cout << prod;
@@ -508,10 +567,10 @@ int main() {
     double x1, y1, x2, y2;
     cin >> x1 >> y1 >> x2 >> y2;
 
-    // TODO: Begin19 — w = abs(x2-x1), h = abs(y2-y1), P = 2*(w+h), S = w*h
+    // TODO: write your solution here
     double P = 0, S = 0; // <-- your code here
 
-    cout << P << "\\n" << S;
+    cout << P << " " << S;
     return 0;
 }
 `,
@@ -533,7 +592,7 @@ int main() {
     double x1, y1, x2, y2;
     cin >> x1 >> y1 >> x2 >> y2;
 
-    // TODO: Begin20 — distance = sqrt((x2-x1)^2 + (y2-y1)^2)
+    // TODO: write your solution here
     double d = 0; // <-- your code here, use sqrt
 
     cout << d;
@@ -558,11 +617,11 @@ int main() {
     double x1, y1, x2, y2, x3, y3;
     cin >> x1 >> y1 >> x2 >> y2 >> x3 >> y3;
 
-    // TODO: Begin21 — sides a,b,c via distance, P = a+b+c, p = P/2, S = sqrt(p*(p-a)*(p-b)*(p-c))
+    // TODO: write your solution here
     double P = 0; // <-- your code here
     double S = 0; // <-- your code here
 
-    cout << P << "\\n" << S;
+    cout << P << " " << S;
     return 0;
 }
 `,
@@ -581,10 +640,10 @@ int main() {
     double A, B;
     cin >> A >> B;
 
-    // TODO: Begin22 — swap A and B (use a temp variable or swap)
+    // TODO: write your solution here
     // <-- your code here
 
-    cout << A << "\\n" << B;
+    cout << A << " " << B;
     return 0;
 }
 `,
@@ -603,10 +662,10 @@ int main() {
     double A, B, C;
     cin >> A >> B >> C;
 
-    // TODO: Begin23 — rotate: newA = C, newB = A, newC = B
+    // TODO: write your solution here
     // <-- your code here
 
-    cout << A << "\\n" << B << "\\n" << C;
+    cout << A << " " << B << " " << C;
     return 0;
 }
 `,
@@ -625,10 +684,10 @@ int main() {
     double A, B, C;
     cin >> A >> B >> C;
 
-    // TODO: Begin24 — rotate: newA = B, newB = C, newC = A
+    // TODO: write your solution here
     // <-- your code here
 
-    cout << A << "\\n" << B << "\\n" << C;
+    cout << A << " " << B << " " << C;
     return 0;
 }
 `,
@@ -647,7 +706,7 @@ int main() {
     double x;
     cin >> x;
 
-    // TODO: Begin25 — y = 3*x^6 - 6*x^2 - 7 (compute powers step by step)
+    // TODO: write your solution here
     double y = 0; // <-- your code here
 
     cout << y;
@@ -669,7 +728,7 @@ int main() {
     double x;
     cin >> x;
 
-    // TODO: Begin26 — t = x-3, y = 4*t^6 - 7*t^3 + 2
+    // TODO: write your solution here
     double y = 0; // <-- your code here
 
     cout << y;
@@ -691,10 +750,10 @@ int main() {
     double A;
     cin >> A;
 
-    // TODO: Begin27 — A2 = A*A, A4 = A2*A2, A8 = A4*A4 (exactly 3 multiplications)
+    // TODO: write your solution here
     double A2 = 0, A4 = 0, A8 = 0; // <-- your code here
 
-    cout << A2 << "\\n" << A4 << "\\n" << A8;
+    cout << A2 << " " << A4 << " " << A8;
     return 0;
 }
 `,
@@ -713,10 +772,10 @@ int main() {
     double A;
     cin >> A;
 
-    // TODO: Begin28 — A2=A*A, A3=A2*A, A5=A3*A2, A10=A5*A5, A15=A10*A5
+    // TODO: write your solution here
     double A2 = 0, A3 = 0, A5 = 0, A10 = 0, A15 = 0; // <-- your code here
 
-    cout << A2 << "\\n" << A3 << "\\n" << A5 << "\\n" << A10 << "\\n" << A15;
+    cout << A2 << " " << A3 << " " << A5 << " " << A10 << " " << A15;
     return 0;
 }
 `,
@@ -735,7 +794,7 @@ int main() {
     double alpha_deg;
     cin >> alpha_deg;
 
-    // TODO: Begin29 — radians = alpha_deg * pi / 180
+    // TODO: write your solution here
     const double pi = 3.14;
     double alpha_rad = 0; // <-- your code here
 
@@ -758,7 +817,7 @@ int main() {
     double alpha_rad;
     cin >> alpha_rad;
 
-    // TODO: Begin30 — degrees = alpha_rad * 180 / pi
+    // TODO: write your solution here
     const double pi = 3.14;
     double alpha_deg = 0; // <-- your code here
 
@@ -781,7 +840,7 @@ int main() {
     double TF;
     cin >> TF;
 
-    // TODO: Begin31 — TC = (TF-32)*5/9
+    // TODO: write your solution here
     double TC = 0; // <-- your code here
 
     cout << TC;
@@ -803,7 +862,7 @@ int main() {
     double TC;
     cin >> TC;
 
-    // TODO: Begin32 — TF = TC*9/5 + 32
+    // TODO: write your solution here
     double TF = 0; // <-- your code here
 
     cout << TF;
@@ -825,10 +884,10 @@ int main() {
     double X, A, Y;
     cin >> X >> A >> Y;
 
-    // TODO: Begin33 — price1 = A/X, priceY = price1*Y
+    // TODO: write your solution here
     double price1 = 0, priceY = 0; // <-- your code here
 
-    cout << price1 << "\\n" << priceY;
+    cout << price1 << " " << priceY;
     return 0;
 }
 `,
@@ -847,10 +906,10 @@ int main() {
     double X, A, Y, B;
     cin >> X >> A >> Y >> B;
 
-    // TODO: Begin34 — choc = A/X, sugar = B/Y, ratio = choc/sugar
+    // TODO: write your solution here
     double choc = 0, sugar = 0, ratio = 0; // <-- your code here
 
-    cout << choc << "\\n" << sugar << "\\n" << ratio;
+    cout << choc << " " << sugar << " " << ratio;
     return 0;
 }
 `,
@@ -869,7 +928,7 @@ int main() {
     double V, U, T1, T2;
     cin >> V >> U >> T1 >> T2;
 
-    // TODO: Begin35 — S = V*T1 + (V-U)*T2
+    // TODO: write your solution here
     double S = 0; // <-- your code here
 
     cout << S;
@@ -891,7 +950,7 @@ int main() {
     double V1, V2, S, T;
     cin >> V1 >> V2 >> S >> T;
 
-    // TODO: Begin36 — D = S + (V1+V2)*T
+    // TODO: write your solution here
     double D = 0; // <-- your code here
 
     cout << D;
@@ -916,7 +975,7 @@ int main() {
     double V1, V2, S, T;
     cin >> V1 >> V2 >> S >> T;
 
-    // TODO: Begin37 — D = abs(S - (V1+V2)*T)
+    // TODO: write your solution here
     double D = 0; // <-- your code here, use abs
 
     cout << D;
@@ -938,7 +997,7 @@ int main() {
     double A, B;
     cin >> A >> B;
 
-    // TODO: Begin38 — x = -B/A
+    // TODO: write your solution here
     double x = 0; // <-- your code here
 
     cout << x;
@@ -963,10 +1022,10 @@ int main() {
     double A, B, C;
     cin >> A >> B >> C;
 
-    // TODO: Begin39 — D = B*B-4*A*C, x1 = (-B-sqrt(D))/(2*A), x2 = (-B+sqrt(D))/(2*A)
+    // TODO: write your solution here
     double x1 = 0, x2 = 0; // <-- your code here
 
-    cout << x1 << "\\n" << x2;
+    cout << x1 << " " << x2;
     return 0;
 }
 `,
@@ -985,10 +1044,10 @@ int main() {
     double A1, B1, C1, A2, B2, C2;
     cin >> A1 >> B1 >> C1 >> A2 >> B2 >> C2;
 
-    // TODO: Begin40 — D = A1*B2-A2*B1, x = (C1*B2-C2*B1)/D, y = (A1*C2-A2*C1)/D
+    // TODO: write your solution here
     double x = 0, y = 0; // <-- your code here
 
-    cout << x << "\\n" << y;
+    cout << x << " " << y;
     return 0;
 }
 `,
