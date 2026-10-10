@@ -38,6 +38,11 @@ export const UI_TEXT: Record<
 		testsPlaceholder: string;
 		expected: string;
 		actual: string;
+		solved: string;
+		solvedCount: (solved: number, total: number) => string;
+		progressLabel: string;
+		resetProgress: string;
+		resetProgressConfirm: string;
 	}
 > = {
 	en: {
@@ -63,6 +68,12 @@ export const UI_TEXT: Record<
 			"Press “Run tests” to check your solution against 5 predefined cases.",
 		expected: "expected",
 		actual: "got",
+		solved: "Solved",
+		solvedCount: (solved, total) => `${solved}/${total} solved`,
+		progressLabel: "Solved progress",
+		resetProgress: "Reset progress",
+		resetProgressConfirm:
+			"Delete all solved problems and saved solutions? This cannot be undone.",
 	},
 	ru: {
 		tasks: "Задания",
@@ -87,6 +98,12 @@ export const UI_TEXT: Record<
 			"Нажмите «Запустить тесты», чтобы проверить решение на 5 тестах.",
 		expected: "ожидалось",
 		actual: "получено",
+		solved: "Решено",
+		solvedCount: (solved, total) => `${solved}/${total} решено`,
+		progressLabel: "Прогресс решений",
+		resetProgress: "Сбросить прогресс",
+		resetProgressConfirm:
+			"Удалить все решённые задания и сохранённые решения? Это действие нельзя отменить.",
 	},
 	ro: {
 		tasks: "Sarcini",
@@ -111,6 +128,12 @@ export const UI_TEXT: Record<
 			"Apasă „Rulează testele” pentru a verifica soluția pe 5 cazuri predefinite.",
 		expected: "așteptat",
 		actual: "obținut",
+		solved: "Rezolvate",
+		solvedCount: (solved, total) => `${solved}/${total} rezolvate`,
+		progressLabel: "Progres rezolvări",
+		resetProgress: "Resetează progresul",
+		resetProgressConfirm:
+			"Ștergi toate problemele rezolvate și soluțiile salvate? Acțiunea nu poate fi anulată.",
 	},
 };
 

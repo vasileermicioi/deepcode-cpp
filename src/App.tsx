@@ -1,11 +1,13 @@
 import {
 	Braces,
+	CircleCheck,
 	FlaskConical,
 	LoaderCircle,
 	Play,
 	RotateCcw,
 	Square,
 	TerminalSquare,
+	Trash2,
 } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
@@ -42,6 +44,7 @@ type EditorStatus = "idle" | "loading" | "compiling" | "running" | "error";
 
 const TASK_KEY = "deepcode-cpp-task";
 const LOCALE_KEY = "deepcode-cpp-locale";
+const SOLVED_KEY = "deepcode-cpp-solved-v1";
 const STDIN_KEY_PREFIX = "deepcode-cpp-stdin-";
 // v2: starter templates switched to `using namespace std;` without fast-io guards.
 // Bump the key so stale v1 drafts cached in localStorage don't override new starters.
@@ -134,6 +137,35 @@ function getInitialLocale(): TaskLocale {
 	return "en";
 }
 
+function loadSolvedIds(): Set<string> {
+	try {
+		const raw = localStorage.getItem(SOLVED_KEY);
+		if (raw === null) {
+			return new Set();
+		}
+		const parsed: unknown = JSON.parse(raw);
+		if (!Array.isArray(parsed)) {
+			return new Set();
+		}
+		const validIds = new Set(BEGIN_TASKS.map((t) => t.id));
+		return new Set(
+			parsed.filter(
+				(id): id is string => typeof id === "string" && validIds.has(id),
+			),
+		);
+	} catch {
+		return new Set();
+	}
+}
+
+function persistSolvedIds(ids: Set<string>): void {
+	try {
+		localStorage.setItem(SOLVED_KEY, JSON.stringify([...ids]));
+	} catch {
+		// ignore quota / private-mode errors - progress is best-effort
+	}
+}
+
 export default function App() {
 	const [taskId, setTaskId] = useState(getInitialTaskId);
 	const [locale, setLocale] = useState<TaskLocale>(getInitialLocale);
@@ -158,6 +190,7 @@ export default function App() {
 	const [testError, setTestError] = useState("");
 	const [isTesting, setIsTesting] = useState(false);
 	const [runningIndex, setRunningIndex] = useState<number | null>(null);
+	const [solvedIds, setSolvedIds] = useState<Set<string>>(loadSolvedIds);
 	const consoleRef = useRef<HTMLDivElement>(null);
 	const runtimeRef = useRef<RuntimeSession | null>(null);
 	const runToken = useRef(0);
@@ -171,6 +204,10 @@ export default function App() {
 	useEffect(() => {
 		localStorage.setItem(LOCALE_KEY, locale);
 	}, [locale]);
+
+	useEffect(() => {
+		persistSolvedIds(solvedIds);
+	}, [solvedIds]);
 
 	// Persist per-task source / stdin
 	useEffect(() => {
@@ -201,7 +238,39 @@ export default function App() {
 	const resetCode = useCallback(() => {
 		setSource(task.starter);
 		setStdin(task.stdin);
+		const currentId = task.id;
+		setSolvedIds((prev) => {
+			if (!prev.has(currentId)) {
+				return prev;
+			}
+			const next = new Set(prev);
+			next.delete(currentId);
+			return next;
+		});
 	}, [task]);
+
+	const resetProgress = useCallback(() => {
+		if (!window.confirm(UI_TEXT[locale].resetProgressConfirm)) {
+			return;
+		}
+		try {
+			for (const t of BEGIN_TASKS) {
+				localStorage.removeItem(`${SOURCE_KEY_PREFIX}${t.id}`);
+				localStorage.removeItem(`${STDIN_KEY_PREFIX}${t.id}`);
+				localStorage.removeItem(`${LEGACY_SOURCE_KEY_PREFIX}${t.id}`);
+			}
+			localStorage.removeItem(SOLVED_KEY);
+		} catch {
+			// ignore storage errors - state reset below is authoritative
+		}
+		setSolvedIds(new Set());
+		setSource(task.starter);
+		setStdin(task.stdin);
+		setTestResults(null);
+		setTestError("");
+		setExitCode(null);
+		setCompileLog("");
+	}, [locale, task]);
 
 	useEffect(() => {
 		if (!consoleRef.current) {
@@ -376,6 +445,17 @@ export default function App() {
 			}
 			setTestResults(results);
 			setRunningIndex(null);
+			if (results.length > 0 && results.every((r) => r.passed)) {
+				const solvedId = task.id;
+				setSolvedIds((prev) => {
+					if (prev.has(solvedId)) {
+						return prev;
+					}
+					const next = new Set(prev);
+					next.add(solvedId);
+					return next;
+				});
+			}
 			const passed = results.filter((r) => r.passed).length;
 			setProgress(
 				passed === results.length
@@ -413,6 +493,10 @@ export default function App() {
 		return map;
 	}, [testResults]);
 
+	const solvedCount = solvedIds.size;
+	const totalCount = BEGIN_TASKS.length;
+	const solvedPct = totalCount > 0 ? (solvedCount / totalCount) * 100 : 0;
+
 	return (
 		<div className="flex h-svh flex-col bg-background">
 			<header className="flex h-12 shrink-0 items-center gap-3 border-b px-3">
@@ -431,11 +515,31 @@ export default function App() {
 						<SelectValue placeholder={ui.task} />
 					</SelectTrigger>
 					<SelectContent className="max-h-80">
-						{BEGIN_TASKS.map((t) => (
-							<SelectItem key={t.id} value={t.id}>
-								{t.id}
-							</SelectItem>
-						))}
+						{BEGIN_TASKS.map((t) => {
+							const solved = solvedIds.has(t.id);
+							return (
+								<SelectItem key={t.id} value={t.id}>
+									<span className="flex items-center gap-1.5">
+										{solved ? (
+											<CircleCheck
+												className="size-3.5 shrink-0 text-emerald-600"
+												aria-label={ui.solved}
+											/>
+										) : (
+											<span className="size-3.5 shrink-0" aria-hidden="true" />
+										)}
+										<span
+											className={cn(
+												solved &&
+													"font-medium text-emerald-700 dark:text-emerald-400",
+											)}
+										>
+											{t.id}
+										</span>
+									</span>
+								</SelectItem>
+							);
+						})}
 					</SelectContent>
 				</Select>
 				<Select
@@ -483,7 +587,40 @@ export default function App() {
 				<Badge variant="outline" className="mt-0.5 shrink-0">
 					{task.id}
 				</Badge>
-				<p className="text-foreground">{task.text[locale]}</p>
+				<p className="min-w-0 flex-1 text-foreground">{task.text[locale]}</p>
+				<div
+					className="ml-auto flex shrink-0 items-center gap-2"
+					title={ui.progressLabel}
+				>
+					<span className="whitespace-nowrap font-mono text-[11px] text-muted-foreground">
+						{ui.solvedCount(solvedCount, totalCount)}
+					</span>
+					<div
+						role="progressbar"
+						aria-label={ui.progressLabel}
+						aria-valuenow={solvedCount}
+						aria-valuemin={0}
+						aria-valuemax={totalCount}
+						className="h-1.5 w-16 overflow-hidden rounded-full bg-muted sm:w-24"
+					>
+						<div
+							className="h-full rounded-full bg-emerald-500 transition-all"
+							style={{ width: `${solvedPct}%` }}
+						/>
+					</div>
+					<Button
+						size="sm"
+						variant="ghost"
+						title={ui.resetProgress}
+						aria-label={ui.resetProgress}
+						onClick={resetProgress}
+						disabled={solvedCount === 0}
+						className="h-6 px-1.5 text-[11px] text-muted-foreground hover:text-destructive"
+					>
+						<Trash2 data-icon="inline-start" className="size-3.5" />
+						<span className="hidden md:inline">{ui.resetProgress}</span>
+					</Button>
+				</div>
 			</div>
 
 			<ResizablePanelGroup orientation="horizontal" className="min-h-0 flex-1">
