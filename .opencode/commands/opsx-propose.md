@@ -2,7 +2,7 @@
 description: "Propose a new change - create it and generate all artifacts in one step"
 ---
 
-Propose a new change - create the change and generate all artifacts in one step.
+Propose a new change - create the change and generate all artifacts in one step. Autonomous by default: derive the name, assume minor details, and create all artifacts without per-artifact approval.
 
 **Planning boundary**: This workflow creates planning artifacts only. The user request that selected or triggered this workflow authorizes planning only, even if it asks to build or fix something. Do not edit project code. After the planning artifacts are complete, stop. Do not start implementation in the same response, even if the initial request asks for it. Wait for a new user request after the artifacts are presented; then start the apply workflow.
 
@@ -45,7 +45,7 @@ In both branches, never create the root as a side effect: do not run `openspec i
 
    **IMPORTANT**: Do NOT proceed without understanding what the user wants to build.
 
-   If the request contains ambiguity that would materially affect scope, externally observable behavior, compatibility, or acceptance criteria, ask the user before creating the change. For minor details, make a reasonable assumption and record it in the planning artifacts.
+   Be autonomous: if no input is provided, infer the change from conversation context if possible before asking. If the request contains ambiguity that would materially affect scope, externally observable behavior, compatibility, or acceptance criteria, ask once (batched, concise) before creating the change. For minor details, make a reasonable assumption and record it in the planning artifacts — never block on minor details. If a change with the derived name already exists, auto-continue it (append / update artifacts) rather than prompting, and announce that choice.
 
 2. **Load project context**
 
@@ -162,6 +162,6 @@ After completing all artifacts, summarize:
 - The request that invoked this workflow authorizes planning only. Any implementation or apply instruction in that request does not carry forward. Do NOT implement the change, start the apply workflow, or edit project code during this workflow. After presenting the artifacts, stop and wait for a new user request to start the apply workflow
 - Create every artifact the apply phase transitively depends on, not just the ids listed in `apply.requires`
 - Always read dependency artifacts before creating a new one - re-read from disk, not from conversation memory (files may have changed since you last saw them)
-- Ask about ambiguities that would materially change scope, externally observable behavior, compatibility, or acceptance criteria; for minor details, make reasonable assumptions and record them
-- If a change with that name already exists, ask if user wants to continue it or create a new one
+- Autonomous by default: ask once about material ambiguities (batched); assume minor details, record assumptions, and proceed without per-artifact confirmation
+- If a change with that name already exists, auto-continue it (update missing artifacts) and announce it — do not prompt unless the existing change is already archived
 - Verify each artifact file exists after writing before proceeding to next

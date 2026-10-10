@@ -2,7 +2,7 @@
 description: "Implement tasks from an OpenSpec change (Experimental)"
 ---
 
-Implement tasks from an OpenSpec change.
+Implement tasks from an OpenSpec change. Autonomous by default: auto-select, auto-implement all pending tasks in a loop without per-task approval.
 
 **Store selection:** If the user names a store (a store is a standalone OpenSpec repo registered on this machine) or the work lives in one, run `openspec store list --json` to discover registered store ids, then pass `--store <id>` on the commands that read or write specs and changes (`new change`, `status`, `instructions`, `list`, `show`, `validate`, `archive`, `doctor`, `context`, `schemas`, `view`). Once selected, treat `--store <id>` as sticky for the rest of the workflow. Every unscoped example of those commands below is shorthand: before running it, append the flag. For example, run `openspec status --change "<name>" --json --store "<id>"`, not the unscoped form shown below. Other commands do not take the flag. Hints printed by commands already carry the flag; keep it on follow-ups. Without a store, commands act on the nearest local `openspec/` root.
 
@@ -17,7 +17,7 @@ Otherwise, with no root, what happens next depends on how this workflow was reac
 
 In both branches, never create the root as a side effect: do not run `openspec init` until the user asks for it, do not hand-create `openspec/` files, and do not let a command create it.
 
-**Input**: Optionally specify a change name (e.g., `/opsx-apply add-auth`). If omitted, check if it can be inferred from conversation context. If vague or ambiguous you MUST prompt for available changes.
+**Input**: Optionally specify a change name (e.g., `/opsx-apply add-auth`). If omitted, infer from conversation context or auto-select if only one active change exists. Only prompt when multiple active changes match and none can be inferred.
 **Provided arguments**: $ARGUMENTS
 
 **Steps**
@@ -27,9 +27,9 @@ In both branches, never create the root as a side effect: do not run `openspec i
    If a name is provided, use it. Otherwise:
    - Infer from conversation context if the user mentioned a change
    - Auto-select if only one active change exists
-   - If ambiguous, run `openspec list --json` to get available changes and ask the user to select one
+   - Only if ambiguous, run `openspec list --json` to get available changes and ask the user to select one. This is the only selection prompt allowed.
 
-   Always announce: "Using change: <name>" and how to override (e.g., `/opsx-apply <other>`).
+   Always announce: "Using change: <name>" and how to override (e.g., `/opsx-apply <other>`). Auto-proceed immediately — do not wait for confirmation.
 
 2. **Check status to understand the schema**
    ```bash
@@ -106,12 +106,15 @@ In both branches, never create the root as a side effect: do not run `openspec i
    - Rerun the apply instructions and confirm that task is now done and progress changed
    - Continue to next task
 
-   **Pause if:**
-   - Task is unclear → ask for clarification
-   - Implementation reveals a design issue → suggest updating artifacts
-   - A task needs work beyond what the spec and tasks describe, or you are tempted to drop, narrow, defer, or accept exceptions to specified behavior to make it fit → surface the added scope and ask; do not absorb it silently
-   - Error or blocker encountered → report and wait for guidance
-   - User interrupts
+   **Autonomous loop (no per-task prompts):**
+   - Work through all pending tasks in order without asking between tasks
+   - Record assumptions for minor ambiguities and continue — do not pause for small details
+   - **Pause only on hard blockers:**
+     - Task is fundamentally unclear and no reasonable interpretation exists → ask once, then continue with best judgment if no answer
+     - Implementation reveals a design issue → record it, apply the minimal fix consistent with specs, note the artifact drift in the summary
+     - A task needs work beyond what the spec describes → implement the specified behavior, log the extra scope as follow-up, do not silently narrow or defer specified behavior
+     - Error or blocker encountered → report and wait for guidance
+     - User interrupts
 
 7. **On completion or pause, show status**
 
@@ -174,9 +177,9 @@ What would you like to do?
 ```
 
 **Guardrails**
-- Keep going through tasks until done or blocked
+- Autonomous by default: keep going through tasks until done or hard-blocked, no per-task confirmation
 - Always read context files before starting (from the apply instructions output)
-- If task is ambiguous, pause and ask before implementing
+- If task is ambiguous on minor details, assume reasonably, record the assumption, and continue — pause and ask only when no reasonable interpretation exists
 - If implementation reveals issues, pause and suggest artifact updates
 - Keep code changes minimal and scoped to each task
 - Update task checkbox immediately after completing each task

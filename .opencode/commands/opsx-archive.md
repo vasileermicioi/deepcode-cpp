@@ -2,7 +2,9 @@
 description: "Archive a completed change in the experimental workflow"
 ---
 
-Archive a completed change in the experimental workflow.
+Archive a completed change in the experimental workflow. Autonomous by default: auto-sync and auto-archive without prompting.
+
+**Autonomy principle:** Act without asking. Auto-select the change when unambiguous, auto-sync delta specs, and auto-archive. Only stop on hard blockers (ambiguous change selection, failed spec validation, failed sync write, archive target collision, unresolvable store). Warnings (incomplete artifacts/tasks, skipped sync for a blocked capability) never block — record them and proceed.
 
 **Store selection:** If the user names a store (a store is a standalone OpenSpec repo registered on this machine) or the work lives in one, run `openspec store list --json` to discover registered store ids, then pass `--store <id>` on the commands that read or write specs and changes (`new change`, `status`, `instructions`, `list`, `show`, `validate`, `archive`, `doctor`, `context`, `schemas`, `view`). Once selected, treat `--store <id>` as sticky for the rest of the workflow. Every unscoped example of those commands below is shorthand: before running it, append the flag. For example, run `openspec status --change "<name>" --json --store "<id>"`, not the unscoped form shown below. Other commands do not take the flag. Hints printed by commands already carry the flag; keep it on follow-ups. Without a store, commands act on the nearest local `openspec/` root.
 
@@ -19,22 +21,23 @@ In both branches, never create the root as a side effect: do not run `openspec i
 
 `<capability-path>` is the spec directory relative to `specs/` (for example, `user-auth` or `identity/user-auth`). Preserve the full path from each delta spec when resolving its main spec.
 
-**Input**: Optionally specify a change name after `/opsx-archive` (e.g., `/opsx-archive add-auth`). If omitted, check if it can be inferred from conversation context. If vague or ambiguous you MUST prompt for available changes.
+**Input**: Optionally specify a change name after `/opsx-archive` (e.g., `/opsx-archive add-auth`). If omitted, infer from conversation context or auto-select if only one active change exists. Only prompt when multiple active changes match and none can be inferred.
 **Provided arguments**: $ARGUMENTS
+**Flags**: `--no-sync` = archive without syncing (default is autosync). `--dry-run` = report what would be archived/synced without moving anything.
 
 **Steps**
 
-1. **Select the change**
+1. **Select the change (autonomous)**
 
    If a name is provided, use it. Otherwise:
    - Infer from conversation context if the user mentioned a change
    - Auto-select if only one active change exists
-   - If ambiguous, run `openspec list --json` to get available changes and ask the user to select one
+   - Only if ambiguous, run `openspec list --json` to get available changes and ask the user to select one. This is the only selection prompt allowed.
 
    When prompting, show only active changes (not already archived).
    Include the schema used for each change if available.
 
-   Always announce: "Using change: <name>" and how to override (e.g., `/opsx-archive <other>`).
+   Always announce: "Using change: <name>" and how to override (e.g., `/opsx-archive <other>`). If `--dry-run` is set, announce dry-run mode and never move directories.
 
    **Load current archive inputs before the existing archive checks:**
 
@@ -73,9 +76,8 @@ In both branches, never create the root as a side effect: do not run `openspec i
    - `artifacts`: List of artifacts with their status (`done`, `skipped`, or other)
 
    **If any artifacts are neither `done` nor `skipped`** (skipped artifacts satisfy the requirement - the change declares skip_specs):
-   - Display warning listing incomplete artifacts
-   - Prompt user for confirmation to continue
-   - Proceed if user confirms
+   - Record a warning listing incomplete artifacts
+   - Auto-proceed without prompting. Do not block archive on this.
 
 3. **Check task completion status**
 
@@ -95,13 +97,12 @@ In both branches, never create the root as a side effect: do not run `openspec i
    other markers, including unfamiliar ones, remain incomplete.
 
    **If incomplete tasks found:**
-   - Display warning showing count of incomplete tasks
-   - Prompt user for confirmation to continue
-   - Proceed if user confirms
+   - Record a warning showing count of incomplete tasks
+   - Auto-proceed without prompting. Do not block archive on this.
 
    **If `totalTasks` is zero:** Proceed without a task-related warning.
 
-4. **Assess delta spec sync state**
+4. **Autosync delta specs (default, no prompt)**
 
    Use `artifactPaths.specs.existingOutputPaths` from status JSON as the only
    delta-spec source. If the `specs` entry is missing or
@@ -116,18 +117,14 @@ In both branches, never create the root as a side effect: do not run `openspec i
      - Otherwise, if the delta has no ADDED requirements, report that no sync is possible and mark that capability as sync-blocked. For a REMOVED-only delta, warn that there is no main spec to remove from and leave the main-spec tree unchanged. `openspec archive` refuses the unmarked REMOVED-only case with `Spec must have at least one requirement`.
      - Otherwise, count the capability as needing sync and name it in the summary (`<capability-path>: new main spec will be created`). If the delta also has REMOVED requirements, warn that they will be ignored because there is no main spec to remove from. The sync creates the main spec from only the delta's ADDED requirements, exactly as `openspec archive` does.
    - Determine what changes would be applied (adds, modifications, removals, renames)
-   - Continue assessing the remaining capabilities even when one is sync-blocked. Show a combined summary before prompting.
+   - Continue assessing the remaining capabilities even when one is sync-blocked.
 
-   **Prompt options:**
-   - If any capability is sync-blocked: explain why and offer only "Archive without syncing", "Cancel"
-   - Otherwise, if changes needed: "Sync now (recommended)", "Archive without syncing"
-   - Otherwise, if already synced: "Archive now", "Sync anyway", "Cancel"
-
-   Route on the answer:
-   - "Cancel" — stop, do not archive
-   - "Archive without syncing" or "Archive now" — proceed to archive
-   - "Sync now" or "Sync anyway" — sync, then verify (below). Do not start any sync while a capability is sync-blocked; explain the blocker and repeat the available choices.
-   - Anything else — ask again rather than archiving
+   **Autonomous routing (no prompt):**
+   - If `--no-sync` flag is set: skip sync entirely, record "sync skipped by flag", proceed to archive.
+   - Else if all capabilities already synced: proceed to archive, record "already synced".
+   - Else if some need sync and none are sync-blocked: autosync everything below, verify, then archive.
+   - Else if some are sync-blocked: autosync every syncable capability, skip blocked ones with a warning naming the blocker, then archive anyway. A sync-blocked capability never stops the archive — it is recorded as "sync skipped (blocked): <reason>" in the summary.
+   - Never prompt "Sync now? / Archive without syncing? / Cancel". Only `--dry-run` prevents the move.
 
    Before a selected sync writes any main spec, run
    `openspec instructions specs --change "<name>" --json` once with the same
@@ -219,14 +216,14 @@ All artifacts complete. All tasks complete.
 **Change:** <change-name>
 **Schema:** <schema-name>
 **Archived to:** the archive path derived from `planningHome.changesDir`/<target-name>/
-**Specs:** Sync skipped (user chose to skip)
+**Specs:** ✓ Synced (1 skipped - blocked, see warnings)
 
 **Warnings:**
 - Archived with 2 incomplete artifacts
 - Archived with 3 incomplete tasks
-- Delta spec sync was skipped (user chose to skip)
+- Sync skipped (blocked) for <capability-path>: <reason>
 
-Review the archive if this was not intentional.
+Autosync completed for all syncable capabilities. Warnings did not block archive.
 ```
 
 **Output On Error (Archive Exists)**
@@ -246,14 +243,14 @@ Target archive directory already exists.
 ```
 
 **Guardrails**
-- Announce the selected change; prompt for selection when it is ambiguous
+- Announce the selected change; prompt for selection only when ambiguous (multiple matches, none inferable)
 - Use artifact graph (openspec status --json) for completion checking
-- Don't block archive on warnings - just inform and confirm
+- Don't block archive on warnings - record them and auto-proceed, never prompt for confirmation
 - Preserve .openspec.yaml when moving to archive (it moves with the directory)
 - Show clear summary of what happened
-- If sync is requested, run the `/opsx-sync` workflow inline (agent-driven)
+- Autosync by default: run the `/opsx-sync` workflow inline (agent-driven) unless `--no-sync` is set. Never prompt for sync approval.
 - Never archive while a spec sync is still in flight — run the sync inline and verify the main specs before moving `changeRoot`
-- If delta specs exist, always run the sync assessment and show the combined summary before prompting
+- If delta specs exist, always run the sync assessment and autosync without prompting; a sync-blocked capability is skipped with warning, never a blocker
 - Apply relevant runtime context and report conflicts; operation guidance remains advisory
 - Consider every guidance entry and explain any inapplicable or conflicting advice
 - Existing CLI checks, resolved paths, prompts, and command contracts are unchanged

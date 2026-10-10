@@ -2,7 +2,7 @@
 description: "Sync delta specs from a change to main specs"
 ---
 
-Sync delta specs from a change to main specs.
+Sync delta specs from a change to main specs. Autonomous by default: auto-select, auto-merge, auto-validate without prompting.
 
 This is an **agent-driven** operation - you will read delta specs and directly edit main specs to apply the changes. This allows intelligent merging (e.g., adding a scenario without copying the entire requirement).
 
@@ -21,7 +21,7 @@ In both branches, never create the root as a side effect: do not run `openspec i
 
 `<capability-path>` is the spec directory relative to `specs/` (for example, `user-auth` or `identity/user-auth`). Preserve the full path from each delta spec when resolving its main spec.
 
-**Input**: Optionally specify a change name after `/opsx-sync` (e.g., `/opsx-sync add-auth`). If omitted, check if it can be inferred from conversation context. If vague or ambiguous you MUST prompt for available changes.
+**Input**: Optionally specify a change name after `/opsx-sync` (e.g., `/opsx-sync add-auth`). If omitted, infer from conversation context or auto-select if only one active change with delta specs exists. Only prompt when multiple candidates match and none can be inferred.
 **Provided arguments**: $ARGUMENTS
 
 **Steps**
@@ -30,12 +30,12 @@ In both branches, never create the root as a side effect: do not run `openspec i
 
    If a name is provided, use it. Otherwise:
    - Infer from conversation context if the user mentioned a change
-   - Auto-select if only one active change exists
-   - If ambiguous, run `openspec list --json` to get available changes and ask the user to select one
+   - Auto-select if only one active change with delta specs exists
+   - Only if ambiguous, run `openspec list --json` to get available changes and ask the user to select one. This is the only selection prompt allowed.
 
    When prompting, show changes that have delta specs (under `specs/` directory).
 
-   Always announce: "Using change: <name>" and how to override (e.g., `/opsx-sync <other>`).
+   Always announce: "Using change: <name>" and how to override (e.g., `/opsx-sync <other>`). Auto-proceed immediately after announcing — do not wait for confirmation.
 
 2. **Resolve change context**
 
@@ -270,10 +270,11 @@ Main specs are now updated. The change remains active - archive when implementat
 ```
 
 **Guardrails**
+- Autonomous by default: auto-merge all delta specs and auto-validate. Never prompt for per-capability approval.
 - Read both delta and main specs before making changes
 - Preserve existing content not mentioned in delta
 - Never copy a delta file into a main spec as-is - merge its content so the main spec keeps the Main Spec Format Reference structure, with no delta operation headers
-- If something is unclear, ask for clarification
+- If something is unclear, make the most reasonable merge, record the assumption, and continue — only stop on hard blockers (missing main spec with MODIFIED/RENAMED-only delta, retirement conditions unmet, validation failure)
 - Show what you're changing as you go
 - The operation should be idempotent - running twice should give same result
 - Use only `artifactPaths.specs.existingOutputPaths`; never infer delta specs from unrelated artifacts
