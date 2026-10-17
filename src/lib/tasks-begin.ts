@@ -43,6 +43,8 @@ export const UI_TEXT: Record<
 		progressLabel: string;
 		resetProgress: string;
 		resetProgressConfirm: string;
+		beginGroup: string;
+		integerGroup: string;
 	}
 > = {
 	en: {
@@ -74,6 +76,8 @@ export const UI_TEXT: Record<
 		resetProgress: "Reset progress",
 		resetProgressConfirm:
 			"Delete all solved problems and saved solutions? This cannot be undone.",
+		beginGroup: "Begin",
+		integerGroup: "Integer",
 	},
 	ru: {
 		tasks: "Задания",
@@ -104,6 +108,8 @@ export const UI_TEXT: Record<
 		resetProgress: "Сбросить прогресс",
 		resetProgressConfirm:
 			"Удалить все решённые задания и сохранённые решения? Это действие нельзя отменить.",
+		beginGroup: "Begin",
+		integerGroup: "Integer",
 	},
 	ro: {
 		tasks: "Sarcini",
@@ -134,6 +140,8 @@ export const UI_TEXT: Record<
 		resetProgress: "Resetează progresul",
 		resetProgressConfirm:
 			"Ștergi toate problemele rezolvate și soluțiile salvate? Acțiunea nu poate fi anulată.",
+		beginGroup: "Begin",
+		integerGroup: "Integer",
 	},
 };
 

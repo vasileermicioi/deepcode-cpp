@@ -36,7 +36,9 @@ import {
 	type TaskLocale,
 	UI_TEXT,
 } from "@/lib/tasks-begin";
-import { BEGIN_TESTS } from "@/lib/tasks-begin-tests";
+import { BEGIN_TESTS, type BeginTestCase } from "@/lib/tasks-begin-tests";
+import { INTEGER_TASKS } from "@/lib/tasks-integer";
+import { INTEGER_TESTS } from "@/lib/tasks-integer-tests";
 import { runBeginTests, type SingleTestResult } from "@/lib/test-runner";
 import { cn } from "@/lib/utils";
 
@@ -51,6 +53,12 @@ const STDIN_KEY_PREFIX = "deepcode-cpp-stdin-";
 const SOURCE_KEY_PREFIX = "deepcode-cpp-source-v2-";
 const STANDARD = "c++20" as const;
 
+const ALL_TASKS = [...BEGIN_TASKS, ...INTEGER_TASKS];
+const ALL_TESTS: Record<string, BeginTestCase[]> = {
+	...BEGIN_TESTS,
+	...INTEGER_TESTS,
+};
+
 function formatBytes(bytes: number) {
 	if (!bytes) {
 		return "";
@@ -61,10 +69,10 @@ function formatBytes(bytes: number) {
 
 function getInitialTaskId() {
 	const saved = localStorage.getItem(TASK_KEY);
-	if (saved && BEGIN_TASKS.some((t) => t.id === saved)) {
+	if (saved && ALL_TASKS.some((t) => t.id === saved)) {
 		return saved;
 	}
-	return BEGIN_TASKS[0].id;
+	return ALL_TASKS[0].id;
 }
 
 function modernizeSource(src: string): string {
@@ -147,7 +155,7 @@ function loadSolvedIds(): Set<string> {
 		if (!Array.isArray(parsed)) {
 			return new Set();
 		}
-		const validIds = new Set(BEGIN_TASKS.map((t) => t.id));
+		const validIds = new Set(ALL_TASKS.map((t) => t.id));
 		return new Set(
 			parsed.filter(
 				(id): id is string => typeof id === "string" && validIds.has(id),
@@ -170,9 +178,11 @@ export default function App() {
 	const [taskId, setTaskId] = useState(getInitialTaskId);
 	const [locale, setLocale] = useState<TaskLocale>(getInitialLocale);
 	const task = useMemo(
-		() => BEGIN_TASKS.find((t) => t.id === taskId) ?? BEGIN_TASKS[0],
+		() => ALL_TASKS.find((t) => t.id === taskId) ?? ALL_TASKS[0],
 		[taskId],
 	);
+	const category = task.id.startsWith("Integer") ? "integer" : "begin";
+	const visibleTasks = category === "integer" ? INTEGER_TASKS : BEGIN_TASKS;
 	const ui = UI_TEXT[locale];
 
 	const [source, setSource] = useState(() => loadSource(task.id, task.starter));
@@ -219,7 +229,7 @@ export default function App() {
 	}, [stdin, task.id]);
 
 	const selectTask = useCallback((id: string) => {
-		const next = BEGIN_TASKS.find((t) => t.id === id);
+		const next = ALL_TASKS.find((t) => t.id === id);
 		if (!next) {
 			return;
 		}
@@ -254,7 +264,7 @@ export default function App() {
 			return;
 		}
 		try {
-			for (const t of BEGIN_TASKS) {
+			for (const t of ALL_TASKS) {
 				localStorage.removeItem(`${SOURCE_KEY_PREFIX}${t.id}`);
 				localStorage.removeItem(`${STDIN_KEY_PREFIX}${t.id}`);
 				localStorage.removeItem(`${LEGACY_SOURCE_KEY_PREFIX}${t.id}`);
@@ -423,7 +433,7 @@ export default function App() {
 				setProgress("Compilation failed");
 				return;
 			}
-			const cases = BEGIN_TESTS[task.id] ?? [];
+			const cases = ALL_TESTS[task.id] ?? [];
 			const acc: SingleTestResult[] = [];
 			setRunningIndex(0);
 			setProgress(`Running test 1/${cases.length}...`);
@@ -483,7 +493,7 @@ export default function App() {
 		[testResults],
 	);
 
-	const testCases = useMemo(() => BEGIN_TESTS[task.id] ?? [], [task.id]);
+	const testCases = useMemo(() => ALL_TESTS[task.id] ?? [], [task.id]);
 
 	const testResultByIndex = useMemo(() => {
 		const map = new Map<number, SingleTestResult>();
@@ -494,8 +504,34 @@ export default function App() {
 	}, [testResults]);
 
 	const solvedCount = solvedIds.size;
-	const totalCount = BEGIN_TASKS.length;
+	const totalCount = ALL_TASKS.length;
 	const solvedPct = totalCount > 0 ? (solvedCount / totalCount) * 100 : 0;
+
+	const renderTaskItems = (list: typeof ALL_TASKS) =>
+		list.map((t) => {
+			const solved = solvedIds.has(t.id);
+			return (
+				<SelectItem key={t.id} value={t.id}>
+					<span className="flex items-center gap-1.5">
+						{solved ? (
+							<CircleCheck
+								className="size-3.5 shrink-0 text-emerald-600"
+								aria-label={ui.solved}
+							/>
+						) : (
+							<span className="size-3.5 shrink-0" aria-hidden="true" />
+						)}
+						<span
+							className={cn(
+								solved && "font-medium text-emerald-700 dark:text-emerald-400",
+							)}
+						>
+							{t.id}
+						</span>
+					</span>
+				</SelectItem>
+			);
+		});
 
 	return (
 		<div className="flex h-svh flex-col bg-background">
@@ -510,36 +546,28 @@ export default function App() {
 					</div>
 				</div>
 				<Separator orientation="vertical" className="h-6" />
+				<Select
+					value={category}
+					onValueChange={(value) =>
+						selectTask(
+							value === "integer" ? INTEGER_TASKS[0].id : BEGIN_TASKS[0].id,
+						)
+					}
+				>
+					<SelectTrigger size="sm" className="w-28">
+						<SelectValue />
+					</SelectTrigger>
+					<SelectContent>
+						<SelectItem value="begin">{ui.beginGroup}</SelectItem>
+						<SelectItem value="integer">{ui.integerGroup}</SelectItem>
+					</SelectContent>
+				</Select>
 				<Select value={taskId} onValueChange={selectTask}>
 					<SelectTrigger size="sm" className="w-32">
 						<SelectValue placeholder={ui.task} />
 					</SelectTrigger>
 					<SelectContent className="max-h-80">
-						{BEGIN_TASKS.map((t) => {
-							const solved = solvedIds.has(t.id);
-							return (
-								<SelectItem key={t.id} value={t.id}>
-									<span className="flex items-center gap-1.5">
-										{solved ? (
-											<CircleCheck
-												className="size-3.5 shrink-0 text-emerald-600"
-												aria-label={ui.solved}
-											/>
-										) : (
-											<span className="size-3.5 shrink-0" aria-hidden="true" />
-										)}
-										<span
-											className={cn(
-												solved &&
-													"font-medium text-emerald-700 dark:text-emerald-400",
-											)}
-										>
-											{t.id}
-										</span>
-									</span>
-								</SelectItem>
-							);
-						})}
+						{renderTaskItems(visibleTasks)}
 					</SelectContent>
 				</Select>
 				<Select
