@@ -36,6 +36,20 @@ let libcxxArchive: Uint8Array | null = null;
 let clangLog = "";
 let lldLog = "";
 let sysrootReady = false;
+let initPromise: Promise<void> | null = null;
+
+function isAbortMessage(message: string): boolean {
+	return /abort/i.test(message);
+}
+
+function resetToolchain() {
+	clang = null;
+	lldWasm = null;
+	twrArchive = null;
+	libcxxArchive = null;
+	sysrootReady = false;
+	initPromise = null;
+}
 
 function post(event: CompilerEvent, transfer?: Transferable[]) {
 	if (transfer?.length) {
@@ -131,9 +145,17 @@ function runTool(mod: EmscriptenModule, args: string[]) {
 		if (error && typeof error === "object" && "status" in error) {
 			return Number((error as { status: number }).status);
 		}
-		if (error instanceof Error && /exit|ExitStatus/i.test(error.message)) {
-			const match = error.message.match(/(\d+)/);
-			return match ? Number(match[1]) : 1;
+		if (error instanceof Error) {
+			if (/exit|ExitStatus/i.test(error.message)) {
+				const match = error.message.match(/(\d+)/);
+				return match ? Number(match[1]) : 1;
+			}
+			// Emscripten abort (e.g. OOM in clang.wasm/lld.wasm) surfaces as
+			// `Aborted()` / `abort(...)`. Normalize so the client can retry
+			// with a fresh worker instead of treating it as a user error.
+			if (isAbortMessage(error.message)) {
+				throw new Error(`Toolchain aborted: ${error.message}`);
+			}
 		}
 		throw error;
 	}
@@ -143,49 +165,69 @@ async function ensureToolchain() {
 	if (clang && lldWasm && twrArchive && libcxxArchive && sysrootReady) {
 		return;
 	}
-
-	post({ type: "progress", message: "Downloading Clang..." });
-	const [clangWasm, fetchedLldWasm, sysroot] = await Promise.all([
-		fetchBinary(`${TOOLCHAIN_WASM_BASE}/clang.wasm`, "Clang"),
-		fetchBinary(`${TOOLCHAIN_WASM_BASE}/lld.wasm`, "LLD"),
-		fetch("/twr-sysroot.tar").then(async (response) => {
-			if (!response.ok) {
-				throw new Error("Failed to download twr-wasm sysroot");
-			}
-			post({
-				type: "progress",
-				message: "Loading twr-wasm headers and libc++...",
-			});
-			return response.arrayBuffer();
-		}),
-	]);
-	lldWasm = fetchedLldWasm;
-
-	post({ type: "progress", message: "Starting Clang..." });
-
-	clang = (await Clang({
-		thisProgram: "clang++",
-		noInitialRun: true,
-		noExitRuntime: true,
-		wasmBinary: clangWasm,
-		print: (data: string) => {
-			clangLog += `${data}\n`;
-		},
-		printErr: (data: string) => {
-			clangLog += `${data}\n`;
-		},
-	})) as EmscriptenModule;
-
-	post({ type: "progress", message: "Mounting twr-wasm sysroot..." });
-	mountSysroot(clang, sysroot);
-	const twr = clang.FS.readFile("/lib-c/twr.a", { encoding: "binary" });
-	const libcxx = clang.FS.readFile("/lib-c/libc++.a", { encoding: "binary" });
-	if (!(twr instanceof Uint8Array) || !(libcxx instanceof Uint8Array)) {
-		throw new Error("twr-wasm sysroot is missing static libraries");
+	if (initPromise) {
+		await initPromise;
+		if (clang && lldWasm && twrArchive && libcxxArchive && sysrootReady) {
+			return;
+		}
 	}
-	twrArchive = twr;
-	libcxxArchive = libcxx;
-	sysrootReady = true;
+
+	initPromise = (async () => {
+		post({ type: "progress", message: "Downloading Clang..." });
+		const [clangWasm, fetchedLldWasm, sysroot] = await Promise.all([
+			fetchBinary(`${TOOLCHAIN_WASM_BASE}/clang.wasm`, "Clang"),
+			fetchBinary(`${TOOLCHAIN_WASM_BASE}/lld.wasm`, "LLD"),
+			fetch("/twr-sysroot.tar").then(async (response) => {
+				if (!response.ok) {
+					throw new Error("Failed to download twr-wasm sysroot");
+				}
+				post({
+					type: "progress",
+					message: "Loading twr-wasm headers and libc++...",
+				});
+				return response.arrayBuffer();
+			}),
+		]);
+		lldWasm = fetchedLldWasm;
+
+		post({ type: "progress", message: "Starting Clang..." });
+
+		clang = (await Clang({
+			thisProgram: "clang++",
+			noInitialRun: true,
+			noExitRuntime: true,
+			wasmBinary: clangWasm,
+			print: (data: string) => {
+				clangLog += `${data}\n`;
+			},
+			printErr: (data: string) => {
+				clangLog += `${data}\n`;
+			},
+		})) as EmscriptenModule;
+
+		post({ type: "progress", message: "Mounting twr-wasm sysroot..." });
+		mountSysroot(clang, sysroot);
+		const twr = clang.FS.readFile("/lib-c/twr.a", { encoding: "binary" });
+		const libcxx = clang.FS.readFile("/lib-c/libc++.a", {
+			encoding: "binary",
+		});
+		if (!(twr instanceof Uint8Array) || !(libcxx instanceof Uint8Array)) {
+			throw new Error("twr-wasm sysroot is missing static libraries");
+		}
+		twrArchive = twr;
+		libcxxArchive = libcxx;
+		sysrootReady = true;
+	})();
+	try {
+		await initPromise;
+	} catch (error) {
+		resetToolchain();
+		throw error;
+	} finally {
+		if (clang && sysrootReady) {
+			initPromise = null;
+		}
+	}
 }
 
 async function createLinker() {
@@ -270,6 +312,12 @@ async function compile(source: string, standard: CppStandard) {
 	const compileCode = runTool(clang, compilerArgs(standard));
 	const compileLog = clangLog.trim();
 	if (compileCode !== 0) {
+		// An aborted clang (OOM / Emscripten abort) poisons the reused
+		// module — drop it so the next compile re-initializes cleanly.
+		// Real syntax errors never contain "abort".
+		if (isAbortMessage(compileLog)) {
+			resetToolchain();
+		}
 		post({
 			type: "compile-result",
 			ok: false,
@@ -286,9 +334,22 @@ async function compile(source: string, standard: CppStandard) {
 	post({ type: "progress", message: "Linking with wasm-ld and twr-wasm..." });
 	const lld = await createLinker();
 	lld.FS.writeFile("/tmp/main.o", objectFile);
-	const linkCode = runTool(lld, linkerArgs());
+	let linkCode = 1;
+	try {
+		linkCode = runTool(lld, linkerArgs());
+	} catch (error) {
+		const message = error instanceof Error ? error.message : String(error);
+		if (isAbortMessage(message)) {
+			resetToolchain();
+			throw new Error(`Toolchain aborted during link: ${message}`);
+		}
+		throw error;
+	}
 	const linkLog = [compileLog, lldLog.trim()].filter(Boolean).join("\n");
 	if (linkCode !== 0) {
+		if (isAbortMessage(linkLog)) {
+			resetToolchain();
+		}
 		post({
 			type: "compile-result",
 			ok: false,
@@ -326,6 +387,9 @@ self.onmessage = async (event: MessageEvent<CompilerRequest>) => {
 		}
 	} catch (error) {
 		const message = error instanceof Error ? error.message : String(error);
+		if (isAbortMessage(message)) {
+			resetToolchain();
+		}
 		post({ type: "error", message });
 	}
 };

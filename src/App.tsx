@@ -67,6 +67,10 @@ function formatBytes(bytes: number) {
 	return `${mb.toFixed(1)} MB`;
 }
 
+function isToolchainFlake(message: string): boolean {
+	return /abort|toolchain hiccup|compiler worker failed/i.test(message);
+}
+
 function getInitialTaskId() {
 	const saved = localStorage.getItem(TASK_KEY);
 	if (saved && ALL_TASKS.some((t) => t.id === saved)) {
@@ -369,7 +373,11 @@ export default function App() {
 			setCompileLog(result.log);
 			if (!result.ok) {
 				setStatus("error");
-				setProgress("Compilation failed");
+				setProgress(
+					isToolchainFlake(result.log)
+						? "Toolchain crashed (transient) — press Run again"
+						: "Compilation failed",
+				);
 				setOutputTab("program");
 				return;
 			}
@@ -391,7 +399,11 @@ export default function App() {
 			}
 			const message = error instanceof Error ? error.message : String(error);
 			setStatus("error");
-			setProgress(message);
+			setProgress(
+				isToolchainFlake(message)
+					? "Toolchain crashed (transient) — press Run again"
+					: message,
+			);
 			setCompileLog(message);
 			setOutputTab("program");
 		}
@@ -427,10 +439,15 @@ export default function App() {
 			}
 			setCompileLog(result.log);
 			if (!result.ok) {
+				const flake = isToolchainFlake(result.log);
 				setTestError(result.log || "Compilation failed");
 				setTestResults(null);
 				setRunningIndex(null);
-				setProgress("Compilation failed");
+				setProgress(
+					flake
+						? "Toolchain crashed (transient) — press Run tests again"
+						: "Compilation failed",
+				);
 				return;
 			}
 			const cases = ALL_TESTS[task.id] ?? [];
@@ -479,7 +496,11 @@ export default function App() {
 			const message = error instanceof Error ? error.message : String(error);
 			setTestError(message);
 			setRunningIndex(null);
-			setProgress(message);
+			setProgress(
+				isToolchainFlake(message)
+					? "Toolchain crashed (transient) — press Run tests again"
+					: message,
+			);
 		} finally {
 			if (token === testRunToken.current) {
 				setIsTesting(false);
