@@ -503,8 +503,9 @@ export default function App() {
 		return map;
 	}, [testResults]);
 
-	const solvedCount = solvedIds.size;
-	const totalCount = ALL_TASKS.length;
+	const totalSolvedCount = solvedIds.size;
+	const solvedCount = visibleTasks.filter((t) => solvedIds.has(t.id)).length;
+	const totalCount = visibleTasks.length;
 	const solvedPct = totalCount > 0 ? (solvedCount / totalCount) * 100 : 0;
 
 	const renderTaskItems = (list: typeof ALL_TASKS) =>
@@ -642,7 +643,7 @@ export default function App() {
 						title={ui.resetProgress}
 						aria-label={ui.resetProgress}
 						onClick={resetProgress}
-						disabled={solvedCount === 0}
+						disabled={totalSolvedCount === 0}
 						className="h-6 px-1.5 text-[11px] text-muted-foreground hover:text-destructive"
 					>
 						<Trash2 data-icon="inline-start" className="size-3.5" />
