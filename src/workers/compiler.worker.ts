@@ -178,6 +178,324 @@ const OPTIMIZER_ORIGINS: Record<string, string[]> = {
 	hypot: ["sqrt"],
 };
 
+// libc++ transitive includes can make std symbols visible even without the
+// proper #include (e.g. pow via <iostream>), so the compiler stays silent and
+// the mistake only surfaces as a wrong answer or a cryptic link error. Catch
+// it early with a clang-style error pointing at the exact line:col.
+type HeaderRule = {
+	/** Any of these includes satisfies the rule. */
+	headers: string[];
+	/** Shown in the error, e.g. "<cmath>" or "<utility> (or <algorithm>)". */
+	label: string;
+	libName: string;
+	/** [symbol shown in error, usage pattern] */
+	symbols: { name: string; re: RegExp }[];
+};
+
+const callOf = (name: string): { name: string; re: RegExp } => ({
+	name,
+	re: new RegExp(`\\b${name}\\s*\\(`),
+});
+const wordOf = (name: string): { name: string; re: RegExp } => ({
+	name,
+	re: new RegExp(`\\b${name}\\b`),
+});
+
+const HEADER_RULES: HeaderRule[] = [
+	{
+		headers: ["iostream"],
+		label: "<iostream>",
+		libName: "I/O library",
+		symbols: [wordOf("cin"), wordOf("cout"), wordOf("cerr"), wordOf("clog")],
+	},
+	{
+		headers: ["cmath", "math.h"],
+		label: "<cmath>",
+		libName: "math library",
+		symbols: [
+			"pow",
+			"powf",
+			"sqrt",
+			"sqrtf",
+			"cbrt",
+			"cbrtf",
+			"sin",
+			"sinf",
+			"cos",
+			"cosf",
+			"tan",
+			"tanf",
+			"asin",
+			"asinf",
+			"acos",
+			"acosf",
+			"atan",
+			"atanf",
+			"atan2",
+			"atan2f",
+			"exp",
+			"expf",
+			"exp2",
+			"exp2f",
+			"expm1",
+			"log",
+			"logf",
+			"log2",
+			"log10",
+			"fabs",
+			"fabsf",
+			"floor",
+			"floorf",
+			"ceil",
+			"ceilf",
+			"trunc",
+			"truncf",
+			"fmod",
+			"fmodf",
+			"hypot",
+			"hypotf",
+			"round",
+			"roundf",
+		].map(callOf),
+	},
+	{
+		headers: ["string"],
+		label: "<string>",
+		libName: "string library",
+		symbols: [
+			wordOf("string"),
+			callOf("getline"),
+			callOf("to_string"),
+			callOf("stoi"),
+			callOf("stol"),
+			callOf("stod"),
+			callOf("stof"),
+		],
+	},
+	{
+		headers: ["vector"],
+		label: "<vector>",
+		libName: "vector library",
+		symbols: [wordOf("vector")],
+	},
+	{
+		headers: ["algorithm"],
+		label: "<algorithm>",
+		libName: "algorithm library",
+		symbols: [
+			callOf("sort"),
+			callOf("stable_sort"),
+			callOf("reverse"),
+			callOf("find"),
+			callOf("find_if"),
+			callOf("count"),
+			callOf("count_if"),
+			callOf("fill"),
+			callOf("transform"),
+			callOf("for_each"),
+			callOf("lower_bound"),
+			callOf("upper_bound"),
+			callOf("binary_search"),
+			callOf("unique"),
+			callOf("min"),
+			callOf("max"),
+			callOf("minmax"),
+			callOf("clamp"),
+		],
+	},
+	{
+		headers: ["utility", "algorithm"],
+		label: "<utility> (or <algorithm>)",
+		libName: "utility library",
+		symbols: [callOf("swap"), wordOf("pair"), callOf("make_pair")],
+	},
+	{
+		headers: ["iomanip"],
+		label: "<iomanip>",
+		libName: "format library",
+		symbols: [
+			callOf("setprecision"),
+			callOf("setw"),
+			callOf("setfill"),
+			{ name: "fixed", re: /std::\bfixed\b|<<\s*fixed\b/ },
+			{ name: "scientific", re: /std::\bscientific\b|<<\s*scientific\b/ },
+		],
+	},
+	{
+		headers: ["sstream"],
+		label: "<sstream>",
+		libName: "string-stream library",
+		symbols: [
+			wordOf("stringstream"),
+			wordOf("istringstream"),
+			wordOf("ostringstream"),
+		],
+	},
+	{
+		headers: ["map"],
+		label: "<map>",
+		libName: "map library",
+		symbols: [wordOf("map")],
+	},
+	{
+		headers: ["set"],
+		label: "<set>",
+		libName: "set library",
+		symbols: [{ name: "set", re: /\bstd::set\b|\bset\s*</ }],
+	},
+	{
+		headers: ["array"],
+		label: "<array>",
+		libName: "array library",
+		symbols: [wordOf("array")],
+	},
+	{
+		headers: ["queue"],
+		label: "<queue>",
+		libName: "queue library",
+		symbols: [wordOf("queue"), wordOf("priority_queue")],
+	},
+	{
+		headers: ["stack"],
+		label: "<stack>",
+		libName: "stack library",
+		symbols: [{ name: "stack", re: /\bstd::stack\b|\bstack\s*</ }],
+	},
+	{
+		headers: ["deque"],
+		label: "<deque>",
+		libName: "deque library",
+		symbols: [wordOf("deque")],
+	},
+	{
+		headers: ["list"],
+		label: "<list>",
+		libName: "list library",
+		symbols: [{ name: "list", re: /\bstd::list\b|\blist\s*</ }],
+	},
+	{
+		headers: ["unordered_map"],
+		label: "<unordered_map>",
+		libName: "hash-map library",
+		symbols: [wordOf("unordered_map")],
+	},
+	{
+		headers: ["unordered_set"],
+		label: "<unordered_set>",
+		libName: "hash-set library",
+		symbols: [wordOf("unordered_set")],
+	},
+	{
+		headers: ["cstdlib", "stdlib.h"],
+		label: "<cstdlib>",
+		libName: "C stdlib library",
+		symbols: [
+			callOf("rand"),
+			callOf("srand"),
+			callOf("atoi"),
+			callOf("atof"),
+			callOf("exit"),
+			callOf("system"),
+		],
+	},
+	{
+		headers: ["cctype", "ctype.h"],
+		label: "<cctype>",
+		libName: "char-class library",
+		symbols: [
+			callOf("isalpha"),
+			callOf("isdigit"),
+			callOf("isalnum"),
+			callOf("isspace"),
+			callOf("toupper"),
+			callOf("tolower"),
+		],
+	},
+	{
+		headers: ["cstdio", "stdio.h"],
+		label: "<cstdio>",
+		libName: "C I/O library",
+		symbols: [callOf("printf"), callOf("scanf")],
+	},
+	{
+		headers: ["limits"],
+		label: "<limits>",
+		libName: "limits library",
+		symbols: [wordOf("numeric_limits")],
+	},
+	{
+		headers: ["fstream"],
+		label: "<fstream>",
+		libName: "file-stream library",
+		symbols: [wordOf("ifstream"), wordOf("ofstream"), wordOf("fstream")],
+	},
+];
+
+function checkMissingIncludes(source: string): string | null {
+	if (/#include\s*<bits\/stdc\+\+\.h>/.test(source)) {
+		return null;
+	}
+	const present = new Set<string>();
+	for (const match of source.matchAll(/#include\s*<([^>\s]+)>/g)) {
+		present.add(match[1]);
+	}
+	// Preserve line numbers while ignoring comments.
+	const masked = source.replace(/\/\*[\s\S]*?\*\//g, (m) => {
+		const breaks = m.match(/\n/g);
+		return breaks ? "\n".repeat(breaks.length) : "";
+	});
+	const lines = masked.split("\n");
+	const original = source.split("\n");
+	let best: {
+		line: number;
+		col: number;
+		symbol: string;
+		label: string;
+		libName: string;
+		text: string;
+	} | null = null;
+	for (let i = 0; i < lines.length; i++) {
+		const code = lines[i].replace(/\/\/.*$/, "");
+		if (/^\s*#\s*include\b/.test(code)) {
+			continue;
+		}
+		for (const rule of HEADER_RULES) {
+			if (rule.headers.some((h) => present.has(h))) {
+				continue;
+			}
+			for (const { name, re } of rule.symbols) {
+				const match = re.exec(code);
+				if (match) {
+					const col = (match.index ?? 0) + 1;
+					if (
+						!best ||
+						i + 1 < best.line ||
+						(i + 1 === best.line && col < best.col)
+					) {
+						best = {
+							line: i + 1,
+							col,
+							symbol: name,
+							label: rule.label,
+							libName: rule.libName,
+							text: (original[i] ?? "").trim(),
+						};
+					}
+					break;
+				}
+			}
+		}
+	}
+	if (!best) {
+		return null;
+	}
+	return (
+		`main.cpp:${best.line}:${best.col}: error: '${best.symbol}' requires #include ${best.label} — ${best.libName} not included\n` +
+		`  ${best.text}\n` +
+		`note: add #include ${best.label} at the top of main.cpp`
+	);
+}
+
 function enhanceLinkLog(log: string, source: string): string {
 	const cleaned = formatLogPaths(log);
 	const missing = new Set<string>();
@@ -405,6 +723,12 @@ async function compile(source: string, standard: CppStandard) {
 	await ensureToolchain();
 	if (!clang) {
 		throw new Error("Toolchain failed to initialize");
+	}
+
+	const missingIncludeError = checkMissingIncludes(source);
+	if (missingIncludeError) {
+		post({ type: "compile-result", ok: false, log: missingIncludeError });
+		return;
 	}
 
 	clangLog = "";
