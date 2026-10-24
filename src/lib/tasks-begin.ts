@@ -45,6 +45,7 @@ export const UI_TEXT: Record<
 		resetProgressConfirm: string;
 		beginGroup: string;
 		integerGroup: string;
+		booleanGroup: string;
 	}
 > = {
 	en: {
@@ -78,6 +79,7 @@ export const UI_TEXT: Record<
 			"Delete all solved problems and saved solutions? This cannot be undone.",
 		beginGroup: "Begin",
 		integerGroup: "Integer",
+		booleanGroup: "Boolean",
 	},
 	ru: {
 		tasks: "Задания",
@@ -110,6 +112,7 @@ export const UI_TEXT: Record<
 			"Удалить все решённые задания и сохранённые решения? Это действие нельзя отменить.",
 		beginGroup: "Begin",
 		integerGroup: "Integer",
+		booleanGroup: "Boolean",
 	},
 	ro: {
 		tasks: "Sarcini",
@@ -142,6 +145,7 @@ export const UI_TEXT: Record<
 			"Ștergi toate problemele rezolvate și soluțiile salvate? Acțiunea nu poate fi anulată.",
 		beginGroup: "Begin",
 		integerGroup: "Integer",
+		booleanGroup: "Boolean",
 	},
 };
 

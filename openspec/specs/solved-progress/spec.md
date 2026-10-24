@@ -8,7 +8,7 @@ Lets learners see which of the 40 Begin tasks they have solved and track overall
 
 ### Requirement: Solved persistence
 
-The system SHALL persist the set of solved task ids in browser `localStorage` under key `deepcode-cpp-solved-v1` as a JSON array of task ids spanning the Begin and Integer sections.
+The system SHALL persist the set of solved task ids in browser `localStorage` under key `deepcode-cpp-solved-v1` as a JSON array of task ids spanning the Begin, Integer, and Boolean sections.
 
 #### Scenario: Solve persists across reload
 
@@ -41,7 +41,7 @@ The system SHALL consider a task solved if and only if the latest `Run tests` ex
 
 ### Requirement: Solved dropdown marking
 
-The system SHALL mark every solved task in the task dropdown with a solved affordance that is visually distinct from the current-selection indicator, with tasks listed per section through a separate category selector (Begin / Integer).
+The system SHALL mark every solved task in the task dropdown with a solved affordance that is visually distinct from the current-selection indicator, with tasks listed per section through a separate category selector (Begin / Integer / Boolean).
 
 #### Scenario: Marks are distinguishable
 
@@ -55,12 +55,12 @@ The system SHALL mark every solved task in the task dropdown with a solved affor
 
 ### Requirement: Progress statistics
 
-The system SHALL always display the solved count versus the total task count across Begin and Integer (e.g. `N/70`) and a proportional progress bar that update immediately on solve and on reset.
+The system SHALL always display the solved count versus the total task count across Begin, Integer, and Boolean (e.g. `N/110`) and a proportional progress bar that update immediately on solve and on reset.
 
 #### Scenario: Progress updates live
 
 - **WHEN** a task becomes solved or its solved flag is cleared via reset
-- **THEN** the count (e.g. `N/70`) and the bar fill update without requiring reload, and the bar exposes `role="progressbar"` with correct `aria-valuenow/min/max`.
+- **THEN** the count (e.g. `N/110`) and the bar fill update without requiring reload, and the bar exposes `role="progressbar"` with correct `aria-valuenow/min/max`.
 
 #### Scenario: Localized progress labels
 
