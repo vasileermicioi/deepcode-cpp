@@ -537,8 +537,8 @@ export default function App() {
 	}, [testResults]);
 
 	const totalSolvedCount = solvedIds.size;
-	const solvedCount = totalSolvedCount;
-	const totalCount = ALL_TASKS.length;
+	const solvedCount = visibleTasks.filter((t) => solvedIds.has(t.id)).length;
+	const totalCount = visibleTasks.length;
 	const solvedPct = totalCount > 0 ? (solvedCount / totalCount) * 100 : 0;
 
 	const renderTaskItems = (list: typeof ALL_TASKS) =>

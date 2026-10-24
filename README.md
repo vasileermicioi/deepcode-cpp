@@ -15,7 +15,7 @@ bun dev
 
 The first load downloads in-browser Clang/LLD (about 60 MB) and the twr-wasm C/C++ sysroot. After that, `Run` (or ⌘/Ctrl+Enter) compiles `main.cpp` to WebAssembly and executes it entirely in the browser.
 
-Solving any Begin, Integer, or Boolean task (all `Run tests` cases pass) marks it solved: solved tasks show an emerald mark in the task dropdown, progress `N/110` plus a bar stays visible, and the set persists in `localStorage` under `deepcode-cpp-solved-v1` across reloads until `Reset code` clears it.
+Solving any Begin, Integer, or Boolean task (all `Run tests` cases pass) marks it solved: solved tasks show an emerald mark in the task dropdown, progress for the current category (`N/40` Begin, `N/30` Integer, `N/40` Boolean) plus a bar stays visible, and the set persists in `localStorage` under `deepcode-cpp-solved-v1` across reloads until `Reset code` clears it.
 
 In production, Clang and wasm-ld binaries are fetched from jsDelivr so the deploy stays under Cloudflare Workers' 25 MiB per-file limit. Local `bun dev` still serves them from `node_modules`.
 
