@@ -18,11 +18,11 @@ The system SHALL provide 40 Boolean tasks (Boolean1–Boolean40) matching ptaskb
 #### Scenario: Neutral starter
 
 - **WHEN** the user selects a Boolean task with no saved draft
-- **THEN** the editor shows a starter that reads the documented inputs with `cin`, contains no solution in comments, and prints exactly one `0`/`1` token via `cout << result;` (no `boolalpha`).
+- **THEN** the editor shows a starter that reads the documented inputs with `cin`, contains no solution in comments, and prints exactly one `true`/`false` token via `cout << boolalpha << result;`.
 
 ### Requirement: Boolean test cases
 
-The system SHALL ship 5 predefined test cases per Boolean task (200 total) with expected values only `0` (false) or `1` (true), evaluated with the existing headless runner and output comparison.
+The system SHALL ship 5 predefined test cases per Boolean task (200 total) with expected values only `true` or `false`, evaluated with the existing headless runner and output comparison.
 
 #### Scenario: Reference solution passes
 
@@ -31,13 +31,13 @@ The system SHALL ship 5 predefined test cases per Boolean task (200 total) with 
 
 #### Scenario: Canonical boolean form
 
-- **WHEN** a Boolean task is solved with `cout << <boolean expression>;`
-- **THEN** the output `1`/`0` matches the expected value without case or `boolalpha` handling.
+- **WHEN** a Boolean task is solved with `cout << boolalpha << <boolean expression>;`
+- **THEN** the output `true`/`false` matches the expected value via exact string-token comparison (lowercase, no `1`/`0` acceptance).
 
 #### Scenario: Pinned edge semantics
 
 - **WHEN** Boolean29 is tested with a point on the rectangle border, or Boolean36–38 with distinct squares
-- **THEN** the border point counts as inside (`1`) and same-row/column, adjacent-king, and diagonal-bishop moves count as reachable (`1`), matching the documented formulas.
+- **THEN** the border point counts as inside (`true`) and same-row/column, adjacent-king, and diagonal-bishop moves count as reachable (`true`), matching the documented formulas.
 
 ### Requirement: Boolean solved tracking
 

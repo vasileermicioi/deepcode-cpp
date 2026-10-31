@@ -27,7 +27,7 @@ int main() {
     // TODO: write your solution here
     bool result = false; // <-- your code here
 
-    cout << result;
+    cout << boolalpha << result;
     return 0;
 }
 `,
@@ -49,7 +49,7 @@ int main() {
     // TODO: write your solution here
     bool result = false; // <-- your code here
 
-    cout << result;
+    cout << boolalpha << result;
     return 0;
 }
 `,
@@ -71,7 +71,7 @@ int main() {
     // TODO: write your solution here
     bool result = false; // <-- your code here
 
-    cout << result;
+    cout << boolalpha << result;
     return 0;
 }
 `,
@@ -93,7 +93,7 @@ int main() {
     // TODO: write your solution here
     bool result = false; // <-- your code here
 
-    cout << result;
+    cout << boolalpha << result;
     return 0;
 }
 `,
@@ -115,7 +115,7 @@ int main() {
     // TODO: write your solution here
     bool result = false; // <-- your code here
 
-    cout << result;
+    cout << boolalpha << result;
     return 0;
 }
 `,
@@ -137,7 +137,7 @@ int main() {
     // TODO: write your solution here
     bool result = false; // <-- your code here
 
-    cout << result;
+    cout << boolalpha << result;
     return 0;
 }
 `,
@@ -159,7 +159,7 @@ int main() {
     // TODO: write your solution here
     bool result = false; // <-- your code here
 
-    cout << result;
+    cout << boolalpha << result;
     return 0;
 }
 `,
@@ -181,7 +181,7 @@ int main() {
     // TODO: write your solution here
     bool result = false; // <-- your code here
 
-    cout << result;
+    cout << boolalpha << result;
     return 0;
 }
 `,
@@ -203,7 +203,7 @@ int main() {
     // TODO: write your solution here
     bool result = false; // <-- your code here
 
-    cout << result;
+    cout << boolalpha << result;
     return 0;
 }
 `,
@@ -225,7 +225,7 @@ int main() {
     // TODO: write your solution here
     bool result = false; // <-- your code here
 
-    cout << result;
+    cout << boolalpha << result;
     return 0;
 }
 `,
@@ -247,7 +247,7 @@ int main() {
     // TODO: write your solution here
     bool result = false; // <-- your code here
 
-    cout << result;
+    cout << boolalpha << result;
     return 0;
 }
 `,
@@ -269,7 +269,7 @@ int main() {
     // TODO: write your solution here
     bool result = false; // <-- your code here
 
-    cout << result;
+    cout << boolalpha << result;
     return 0;
 }
 `,
@@ -291,7 +291,7 @@ int main() {
     // TODO: write your solution here
     bool result = false; // <-- your code here
 
-    cout << result;
+    cout << boolalpha << result;
     return 0;
 }
 `,
@@ -313,7 +313,7 @@ int main() {
     // TODO: write your solution here
     bool result = false; // <-- your code here
 
-    cout << result;
+    cout << boolalpha << result;
     return 0;
 }
 `,
@@ -335,7 +335,7 @@ int main() {
     // TODO: write your solution here
     bool result = false; // <-- your code here
 
-    cout << result;
+    cout << boolalpha << result;
     return 0;
 }
 `,
@@ -357,7 +357,7 @@ int main() {
     // TODO: write your solution here
     bool result = false; // <-- your code here
 
-    cout << result;
+    cout << boolalpha << result;
     return 0;
 }
 `,
@@ -379,7 +379,7 @@ int main() {
     // TODO: write your solution here
     bool result = false; // <-- your code here
 
-    cout << result;
+    cout << boolalpha << result;
     return 0;
 }
 `,
@@ -401,7 +401,7 @@ int main() {
     // TODO: write your solution here
     bool result = false; // <-- your code here
 
-    cout << result;
+    cout << boolalpha << result;
     return 0;
 }
 `,
@@ -423,7 +423,7 @@ int main() {
     // TODO: write your solution here
     bool result = false; // <-- your code here
 
-    cout << result;
+    cout << boolalpha << result;
     return 0;
 }
 `,
@@ -445,7 +445,7 @@ int main() {
     // TODO: write your solution here
     bool result = false; // <-- your code here
 
-    cout << result;
+    cout << boolalpha << result;
     return 0;
 }
 `,
@@ -467,7 +467,7 @@ int main() {
     // TODO: write your solution here
     bool result = false; // <-- your code here
 
-    cout << result;
+    cout << boolalpha << result;
     return 0;
 }
 `,
@@ -489,7 +489,7 @@ int main() {
     // TODO: write your solution here
     bool result = false; // <-- your code here
 
-    cout << result;
+    cout << boolalpha << result;
     return 0;
 }
 `,
@@ -511,7 +511,7 @@ int main() {
     // TODO: write your solution here
     bool result = false; // <-- your code here
 
-    cout << result;
+    cout << boolalpha << result;
     return 0;
 }
 `,
@@ -533,7 +533,7 @@ int main() {
     // TODO: write your solution here
     bool result = false; // <-- your code here
 
-    cout << result;
+    cout << boolalpha << result;
     return 0;
 }
 `,
@@ -555,7 +555,7 @@ int main() {
     // TODO: write your solution here
     bool result = false; // <-- your code here
 
-    cout << result;
+    cout << boolalpha << result;
     return 0;
 }
 `,
@@ -577,7 +577,7 @@ int main() {
     // TODO: write your solution here
     bool result = false; // <-- your code here
 
-    cout << result;
+    cout << boolalpha << result;
     return 0;
 }
 `,
@@ -599,7 +599,7 @@ int main() {
     // TODO: write your solution here
     bool result = false; // <-- your code here
 
-    cout << result;
+    cout << boolalpha << result;
     return 0;
 }
 `,
@@ -621,7 +621,7 @@ int main() {
     // TODO: write your solution here
     bool result = false; // <-- your code here
 
-    cout << result;
+    cout << boolalpha << result;
     return 0;
 }
 `,
@@ -643,7 +643,7 @@ int main() {
     // TODO: write your solution here
     bool result = false; // <-- your code here
 
-    cout << result;
+    cout << boolalpha << result;
     return 0;
 }
 `,
@@ -665,7 +665,7 @@ int main() {
     // TODO: write your solution here
     bool result = false; // <-- your code here
 
-    cout << result;
+    cout << boolalpha << result;
     return 0;
 }
 `,
@@ -687,7 +687,7 @@ int main() {
     // TODO: write your solution here
     bool result = false; // <-- your code here
 
-    cout << result;
+    cout << boolalpha << result;
     return 0;
 }
 `,
@@ -709,7 +709,7 @@ int main() {
     // TODO: write your solution here
     bool result = false; // <-- your code here
 
-    cout << result;
+    cout << boolalpha << result;
     return 0;
 }
 `,
@@ -731,7 +731,7 @@ int main() {
     // TODO: write your solution here
     bool result = false; // <-- your code here
 
-    cout << result;
+    cout << boolalpha << result;
     return 0;
 }
 `,
@@ -753,7 +753,7 @@ int main() {
     // TODO: write your solution here
     bool result = false; // <-- your code here
 
-    cout << result;
+    cout << boolalpha << result;
     return 0;
 }
 `,
@@ -775,7 +775,7 @@ int main() {
     // TODO: write your solution here
     bool result = false; // <-- your code here
 
-    cout << result;
+    cout << boolalpha << result;
     return 0;
 }
 `,
@@ -797,7 +797,7 @@ int main() {
     // TODO: write your solution here
     bool result = false; // <-- your code here
 
-    cout << result;
+    cout << boolalpha << result;
     return 0;
 }
 `,
@@ -819,7 +819,7 @@ int main() {
     // TODO: write your solution here
     bool result = false; // <-- your code here
 
-    cout << result;
+    cout << boolalpha << result;
     return 0;
 }
 `,
@@ -841,7 +841,7 @@ int main() {
     // TODO: write your solution here
     bool result = false; // <-- your code here
 
-    cout << result;
+    cout << boolalpha << result;
     return 0;
 }
 `,
@@ -863,7 +863,7 @@ int main() {
     // TODO: write your solution here
     bool result = false; // <-- your code here
 
-    cout << result;
+    cout << boolalpha << result;
     return 0;
 }
 `,
@@ -885,7 +885,7 @@ int main() {
     // TODO: write your solution here
     bool result = false; // <-- your code here
 
-    cout << result;
+    cout << boolalpha << result;
     return 0;
 }
 `,
