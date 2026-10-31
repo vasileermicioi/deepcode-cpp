@@ -8,7 +8,7 @@ Lets learners see which of the 40 Begin tasks they have solved and track overall
 
 ### Requirement: Solved persistence
 
-The system SHALL persist the set of solved task ids in browser `localStorage` under key `deepcode-cpp-solved-v1` as a JSON array of task ids spanning the Begin, Integer, and Boolean sections.
+The system SHALL persist the set of solved task ids in browser `localStorage` under key `deepcode-cpp-solved-v1` as a JSON array of task ids spanning the Begin, Integer, Boolean, and If sections.
 
 #### Scenario: Solve persists across reload
 
@@ -41,7 +41,7 @@ The system SHALL consider a task solved if and only if the latest `Run tests` ex
 
 ### Requirement: Solved dropdown marking
 
-The system SHALL mark every solved task in the task dropdown with a solved affordance that is visually distinct from the current-selection indicator, with tasks listed per section through a separate category selector (Begin / Integer / Boolean).
+The system SHALL mark every solved task in the task dropdown with a solved affordance that is visually distinct from the current-selection indicator, with tasks listed per section through a separate category selector (Begin / Integer / Boolean / If).
 
 #### Scenario: Marks are distinguishable
 
@@ -55,17 +55,17 @@ The system SHALL mark every solved task in the task dropdown with a solved affor
 
 ### Requirement: Progress statistics
 
-The system SHALL display the solved count versus the total task count for the currently selected category (e.g. `N/40` for Begin, `N/30` for Integer, `N/40` for Boolean) and a proportional progress bar that update immediately on solve and on reset.
+The system SHALL display the solved count versus the total task count for the currently selected category (e.g. `N/40` for Begin, `N/30` for Integer, `N/40` for Boolean, `N/30` for If; 140 total) and a proportional progress bar that update immediately on solve and on reset.
 
 #### Scenario: Progress updates live
 
 - **WHEN** a task becomes solved or its solved flag is cleared via reset
-- **THEN** the count (e.g. `N/30` with Integer selected) and the bar fill update without requiring reload, and the bar exposes `role="progressbar"` with correct `aria-valuenow/min/max`.
+- **THEN** the count (e.g. `N/30` with If selected) and the bar fill update without requiring reload, and the bar exposes `role="progressbar"` with correct `aria-valuenow/min/max`.
 
 #### Scenario: Switching category switches denominator
 
 - **WHEN** the user picks a section in the category selector
-- **THEN** the count reads `N/40` for Begin, `N/30` for Integer, or `N/40` for Boolean, and the bar fill reflects solved-in-category over that category total.
+- **THEN** the count reads `N/40` for Begin, `N/30` for Integer, `N/40` for Boolean, or `N/30` for If, and the bar fill reflects solved-in-category over that category total.
 
 #### Scenario: Localized progress labels
 

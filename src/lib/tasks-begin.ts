@@ -46,6 +46,7 @@ export const UI_TEXT: Record<
 		beginGroup: string;
 		integerGroup: string;
 		booleanGroup: string;
+		ifGroup: string;
 	}
 > = {
 	en: {
@@ -80,6 +81,7 @@ export const UI_TEXT: Record<
 		beginGroup: "Begin",
 		integerGroup: "Integer",
 		booleanGroup: "Boolean",
+		ifGroup: "If",
 	},
 	ru: {
 		tasks: "Задания",
@@ -113,6 +115,7 @@ export const UI_TEXT: Record<
 		beginGroup: "Begin",
 		integerGroup: "Integer",
 		booleanGroup: "Boolean",
+		ifGroup: "If",
 	},
 	ro: {
 		tasks: "Sarcini",
@@ -146,6 +149,7 @@ export const UI_TEXT: Record<
 		beginGroup: "Begin",
 		integerGroup: "Integer",
 		booleanGroup: "Boolean",
+		ifGroup: "If",
 	},
 };
 

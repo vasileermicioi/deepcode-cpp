@@ -39,6 +39,8 @@ import {
 import { BEGIN_TESTS, type BeginTestCase } from "@/lib/tasks-begin-tests";
 import { BOOLEAN_TASKS } from "@/lib/tasks-boolean";
 import { BOOLEAN_TESTS } from "@/lib/tasks-boolean-tests";
+import { IF_TASKS } from "@/lib/tasks-if";
+import { IF_TESTS } from "@/lib/tasks-if-tests";
 import { INTEGER_TASKS } from "@/lib/tasks-integer";
 import { INTEGER_TESTS } from "@/lib/tasks-integer-tests";
 import { runBeginTests, type SingleTestResult } from "@/lib/test-runner";
@@ -55,11 +57,17 @@ const STDIN_KEY_PREFIX = "deepcode-cpp-stdin-";
 const SOURCE_KEY_PREFIX = "deepcode-cpp-source-v2-";
 const STANDARD = "c++20" as const;
 
-const ALL_TASKS = [...BEGIN_TASKS, ...INTEGER_TASKS, ...BOOLEAN_TASKS];
+const ALL_TASKS = [
+	...BEGIN_TASKS,
+	...INTEGER_TASKS,
+	...BOOLEAN_TASKS,
+	...IF_TASKS,
+];
 const ALL_TESTS: Record<string, BeginTestCase[]> = {
 	...BEGIN_TESTS,
 	...INTEGER_TESTS,
 	...BOOLEAN_TESTS,
+	...IF_TESTS,
 };
 
 function formatBytes(bytes: number) {
@@ -188,17 +196,21 @@ export default function App() {
 		() => ALL_TASKS.find((t) => t.id === taskId) ?? ALL_TASKS[0],
 		[taskId],
 	);
-	const category = task.id.startsWith("Boolean")
-		? "boolean"
-		: task.id.startsWith("Integer")
-			? "integer"
-			: "begin";
+	const category = task.id.startsWith("If")
+		? "if"
+		: task.id.startsWith("Boolean")
+			? "boolean"
+			: task.id.startsWith("Integer")
+				? "integer"
+				: "begin";
 	const visibleTasks =
-		category === "boolean"
-			? BOOLEAN_TASKS
-			: category === "integer"
-				? INTEGER_TASKS
-				: BEGIN_TASKS;
+		category === "if"
+			? IF_TASKS
+			: category === "boolean"
+				? BOOLEAN_TASKS
+				: category === "integer"
+					? INTEGER_TASKS
+					: BEGIN_TASKS;
 	const ui = UI_TEXT[locale];
 
 	const [source, setSource] = useState(() => loadSource(task.id, task.starter));
@@ -584,11 +596,13 @@ export default function App() {
 					value={category}
 					onValueChange={(value) =>
 						selectTask(
-							value === "boolean"
-								? BOOLEAN_TASKS[0].id
-								: value === "integer"
-									? INTEGER_TASKS[0].id
-									: BEGIN_TASKS[0].id,
+							value === "if"
+								? IF_TASKS[0].id
+								: value === "boolean"
+									? BOOLEAN_TASKS[0].id
+									: value === "integer"
+										? INTEGER_TASKS[0].id
+										: BEGIN_TASKS[0].id,
 						)
 					}
 				>
@@ -599,6 +613,7 @@ export default function App() {
 						<SelectItem value="begin">{ui.beginGroup}</SelectItem>
 						<SelectItem value="integer">{ui.integerGroup}</SelectItem>
 						<SelectItem value="boolean">{ui.booleanGroup}</SelectItem>
+						<SelectItem value="if">{ui.ifGroup}</SelectItem>
 					</SelectContent>
 				</Select>
 				<Select value={taskId} onValueChange={selectTask}>

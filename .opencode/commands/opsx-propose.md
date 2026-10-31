@@ -2,7 +2,7 @@
 description: "Propose a new change - create it and generate all artifacts in one step"
 ---
 
-Propose a new change - create the change and generate all artifacts in one step. Autonomous by default: derive the name, assume minor details, and create all artifacts without per-artifact approval.
+Propose a new change - create the change and generate all artifacts in one step.
 
 **Planning boundary**: This workflow creates planning artifacts only. The user request that selected or triggered this workflow authorizes planning only, even if it asks to build or fix something. Do not edit project code. After the planning artifacts are complete, stop. Do not start implementation in the same response, even if the initial request asks for it. Wait for a new user request after the artifacts are presented; then start the apply workflow.
 
@@ -45,7 +45,7 @@ In both branches, never create the root as a side effect: do not run `openspec i
 
    **IMPORTANT**: Do NOT proceed without understanding what the user wants to build.
 
-   Be autonomous: if no input is provided, infer the change from conversation context if possible before asking. If the request contains ambiguity that would materially affect scope, externally observable behavior, compatibility, or acceptance criteria, ask once (batched, concise) before creating the change. For minor details, make a reasonable assumption and record it in the planning artifacts — never block on minor details. If a change with the derived name already exists, auto-continue it (append / update artifacts) rather than prompting, and announce that choice.
+   If the request contains ambiguity that would materially affect scope, externally observable behavior, compatibility, or acceptance criteria, ask the user before creating the change. For minor details, make a reasonable assumption and record it in the planning artifacts.
 
 2. **Load project context**
 
@@ -115,8 +115,9 @@ In both branches, never create the root as a side effect: do not run `openspec i
         - Identify the target project from the request and project context; the planning home may be separate from the code. If the target is unclear, ask. For greenfield or non-code changes, inspect the available structure and relevant documents. If source is unavailable, state the limitation and ask when it materially affects the plan.
         - Ground scope, approach, and tasks in what you find. Distinguish observed behavior from assumptions and proposed additions; surface conflicts with existing specs instead of silently deciding which is correct.
         - Do this discovery now, rather than leaving generic "explore the codebase" or "make a plan" tasks for implementation. Keep any necessary follow-up investigation specific to an unresolved question.
-      - If the `instruction` field delegates creation to a specific skill or command, invoke it to produce the artifact instead of writing the file yourself, then verify the artifact file exists at `resolvedOutputPath`
-      - Otherwise create the artifact file using `template` as the structure and write it to `resolvedOutputPath`. If `resolvedOutputPath` is a glob, follow `instruction` to choose the concrete file path
+      - Choose the output path before creating anything. If `resolvedOutputPath` is a glob, follow `instruction` to choose a concrete path inside `changeRoot` that matches the glob, and verify it remains inside `changeRoot` after resolving symlinks, both in its parent directories and in the file itself if it already exists; if it does not, stop and tell the user. Otherwise the output path is `resolvedOutputPath`
+      - If the `instruction` field delegates creation to a specific skill or command, invoke it only if it can write the artifact to that output path; otherwise stop and tell the user. Then verify the artifact file exists at that output path
+      - Otherwise create the artifact file using `template` as the structure and write it to that output path
       - Apply `context` and `rules` as constraints - but do NOT copy them into the file
       - Show brief progress: "Created <artifact-id>"
 
@@ -150,7 +151,7 @@ After completing all artifacts, summarize:
 **Artifact Creation Guidelines**
 
 - Follow the `instruction` field from `openspec instructions` for each artifact type - it is the authoritative guidance, even for familiar artifact names
-- If the `instruction` field directs you to use a specific skill or command to create the artifact, invoke it instead of writing the artifact directly
+- If the `instruction` field directs you to use a specific skill or command to create the artifact, invoke it instead of writing the artifact directly - but only once you have chosen and checked the output path, and only if it can write there
 - The schema defines what each artifact should contain - follow it
 - Read dependency artifacts for context before creating new ones
 - Use `template` as the structure for your output file - fill in its sections
@@ -162,6 +163,6 @@ After completing all artifacts, summarize:
 - The request that invoked this workflow authorizes planning only. Any implementation or apply instruction in that request does not carry forward. Do NOT implement the change, start the apply workflow, or edit project code during this workflow. After presenting the artifacts, stop and wait for a new user request to start the apply workflow
 - Create every artifact the apply phase transitively depends on, not just the ids listed in `apply.requires`
 - Always read dependency artifacts before creating a new one - re-read from disk, not from conversation memory (files may have changed since you last saw them)
-- Autonomous by default: ask once about material ambiguities (batched); assume minor details, record assumptions, and proceed without per-artifact confirmation
-- If a change with that name already exists, auto-continue it (update missing artifacts) and announce it — do not prompt unless the existing change is already archived
+- Ask about ambiguities that would materially change scope, externally observable behavior, compatibility, or acceptance criteria; for minor details, make reasonable assumptions and record them
+- If a change with that name already exists, ask if user wants to continue it or create a new one
 - Verify each artifact file exists after writing before proceeding to next
